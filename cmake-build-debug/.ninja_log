@@ -1,0 +1,8 @@
+# ninja log v5
+265	315	1648911380185712374	CBcompiler	5c08e9399f12a506
+0	19	1648908106268745841	CMakeFiles/CBcompiler.dir/Regex2Dfa/Edge.cpp.o	da826dbe3bcf58fc
+1	14	1649864849464515010	build.ninja	26e5701d0d91924f
+0	436	1648911366926577492	CMakeFiles/CBcompiler.dir/main.cpp.o	caf108f2f2554248
+0	19	1648908106268745841	CMakeFiles/CBcompiler.dir/Regex2Dfa/Node.cpp.o	484f2427a3972261
+0	209	1648911366702592250	CMakeFiles/CBcompiler.dir/Regex2Dfa/Regex.cpp.o	b6bca7fb9cfa86c4
+0	265	1648911380137715475	CMakeFiles/CBcompiler.dir/Regex2Dfa/Regex2Dfa.cpp.o	6770807cba90b710

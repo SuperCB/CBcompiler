@@ -6,93 +6,30 @@
 #include <stack>
 #include <string_view>
 #include <utility>
+#include <memory>
 
 using namespace std;
 
-
-const int N = 10000, M = 13000;
-int h[N], e[M], ne[M], idx;
-
-
-struct Node {
-    unsigned int id;
-
-};
-
-void add(int a, int b) {
-    e[idx] = b, ne[idx] = h[a], h[a] = idx++;
-}
-
-enum regex_type {
-    OP,
-    SET,
-    SUBREGEX,
-    CHAR
-};
-struct RegexToken {
-    regex_type type;
-    char op;
-    string str;
-};
-
-inline bool specialOperator(char op) {
-    if (op == '*' || op == '|' || op == '+')
-        return true;
-    else
-        return false;
-}
-
-vector<RegexToken> dropparentthese(string_view str) {
-
-    vector<RegexToken> result;
-    for (int i = 0; i < str.size();) {
-        char ch = str[i];
-        if (ch == '(') {
-            // we only consider the situation with a layer of parenthese
-            string substr{};
-            while (i < str.size() && str[i] != ')') {
-                substr += str[i];
-                i++;
-            }
-            result.push_back({SUBREGEX, {}, substr});
-            i++;
-        } else if (ch == '[') {
-            string substr{};
-            while (i < str.size() && str[i] != ']') {
-                substr += str[i];
-                i++;
-            }
-            result.push_back({SET, {}, substr});
-            i++;
-        } else if (specialOperator(ch)) {
-            result.push_back({OP, ch, {}});
-        } else {
-            result.push_back({CHAR, ch, {}});
-        }
+class Learn {
+public:
+    Learn() : c(nullptr) {
+        cout << "fdas" << endl;
     }
-    return std::move(result);
-}
-
-void dealsubregex(RegexToken regexToken) {
-    for (int i = 0; i < regexToken.str.size(); i++)
-    {
+    Learn(int *c_) : c(c_) {
+        cout << "fdas" << endl;
     }
-}
 
-void regex2dfa(vector<RegexToken> input) {
-    for (auto &regextoken: input) {
-        switch (regextoken.type) {
-            case SUBREGEX:
-
-
-                break;
-        }
+    Learn(Learn &&learn) : c(learn.c) {
+        learn.c = nullptr;
+        cout << "move" << endl;
     }
-}
+    int *c;
+};
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
-
-
+    vector<Learn> learns = vector<Learn>(10);
+    int c = 211;
+    Learn c1(&c);
+    learns[2] = move(c1);
     return 0;
 }
