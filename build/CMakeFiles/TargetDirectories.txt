@@ -1,3 +1,0 @@
-/home/supercb/mycode/CppProjects/CBcompiler/build/CMakeFiles/CBcompiler.dir
-/home/supercb/mycode/CppProjects/CBcompiler/build/CMakeFiles/edit_cache.dir
-/home/supercb/mycode/CppProjects/CBcompiler/build/CMakeFiles/rebuild_cache.dir

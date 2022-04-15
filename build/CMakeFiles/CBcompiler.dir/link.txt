@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/CBcompiler.dir/main.cpp.o CMakeFiles/CBcompiler.dir/Regex2Dfa/Regex2Dfa.cpp.o -o CBcompiler 
