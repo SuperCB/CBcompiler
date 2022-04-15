@@ -11,29 +11,148 @@ Regex2Dfa::Regex2Dfa(std::string_view regexstr) : idx(0) {
     ne = new int[2 * size];
     h = new int[size];
 
-    std::stack<uint8> states;
+    std::stack<uint> states;
     std::stack<Token> token_stack;
     std::vector<Token> tokens = Preprocessing(regexstr);
-
-    states.push(0);
-
+    tokens.push_back({RegexTOKEN::OVER, "$"});
     for (auto token: tokens) {
-
+        std::cout << token.str << std::endl;
+    }
+    states.push(0);
+    bool flag = false;
+    uint tokeni = 0;
+    while (tokeni < tokens.size()) {
+        auto token = tokens[tokeni];
+        std::cout << token.str << std::endl;
         RegexTOKEN token_type = token.type;
-        uint8 top = states.top();
-
-        ChartItem item = lr0echart[top][static_cast<uint8>(token_type)];
-
+        uint top = states.top();
+        ChartItem item = ACTIONS[top][static_cast<uint>(token_type)];
         switch (item.act) {
             case ACTION::SHIFT:
+                states.push(item.val);
+                token_stack.push(token);
+                tokeni++;
+                break;
+            case ACTION::REDUCE: {
+                uint new_state{};
+                switch (item.val) {
+                    case 1:
+                        states.pop();
+                        token_stack.pop();
+                        states.pop();
+                        token_stack.pop();
+                        states.pop();
+                        token_stack.pop();
+                        new_state = GOTOS[states.top()][static_cast<int>(RegexTOKEN::E)];
+                        states.push(new_state);
+                        token_stack.push({RegexTOKEN::E, {}});
 
+                        dbg("E-> E or T");
+                        break;
+                    case 2:
+                        states.pop();
+                        token_stack.pop();
+                        states.pop();
+                        token_stack.pop();
+                        new_state = GOTOS[states.top()][static_cast<int>(RegexTOKEN::E)];
+                        states.push(new_state);
+                        token_stack.push({RegexTOKEN::E, {}});
+
+                        dbg("E-> ET");
+
+                        break;
+                    case 3:
+                        states.pop();
+                        token_stack.pop();
+                        new_state = GOTOS[states.top()][static_cast<int>(RegexTOKEN::E)];
+                        states.push(new_state);
+                        dbg("E-> T");
+                        token_stack.push({RegexTOKEN::E, {}});
+
+                        break;
+                    case 4:
+                        states.pop();
+                        token_stack.pop();
+                        states.pop();
+                        token_stack.pop();
+                        new_state = GOTOS[states.top()][static_cast<int>(RegexTOKEN::T)];
+                        states.push(new_state);
+                        token_stack.push({RegexTOKEN::T, {}});
+
+                        dbg("T-> F+");
+
+                        break;
+                    case 5:
+                        states.pop();
+                        token_stack.pop();
+                        states.pop();
+                        token_stack.pop();
+                        new_state = GOTOS[states.top()][static_cast<int>(RegexTOKEN::T)];
+                        states.push(new_state);
+                        token_stack.push({RegexTOKEN::T, {}});
+
+                        dbg("T-> F*");
+                        break;
+                    case 6:
+                        states.pop();
+                        token_stack.pop();
+                        states.pop();
+                        token_stack.pop();
+                        new_state = GOTOS[states.top()][static_cast<int>(RegexTOKEN::T)];
+                        states.push(new_state);
+                        token_stack.push({RegexTOKEN::T, {}});
+
+                        dbg("T-> F?");
+
+                        break;
+                    case 7:
+                        states.pop();
+                        token_stack.pop();
+                        new_state = GOTOS[states.top()][static_cast<int>(RegexTOKEN::T)];
+                        states.push(new_state);
+                        token_stack.push({RegexTOKEN::T, {}});
+
+                        dbg("T-> F");
+
+                        break;
+                    case 8:
+                        states.pop();
+                        token_stack.pop();
+                        states.pop();
+                        token_stack.pop();
+                        states.pop();
+                        token_stack.pop();
+                        new_state = GOTOS[states.top()][static_cast<int>(RegexTOKEN::F)];
+
+                        states.push(new_state);
+                        token_stack.push({RegexTOKEN::F, {}});
+
+                        dbg("F-> (E)");
+
+                        break;
+                    case 9:
+                        states.pop();
+                        token_stack.pop();
+                        new_state = GOTOS[states.top()][static_cast<int>(RegexTOKEN::F)];
+                        states.push(new_state);
+                        token_stack.push({RegexTOKEN::F, {}});
+
+                        dbg("F-> id");
+                        break;
+                }
                 break;
-            case ACTION::REDUCE:
-                break;
+            }
             case ACTION::ACCPET:
+                dbg("success");
+                flag = true;
                 break;
             case ACTION::ERR:
+                dbg("wrong regex input");
+                flag = true;
                 break;
+        }
+        if (flag) {
+            break;
         }
     }
 
@@ -80,12 +199,12 @@ std::vector<Token> Regex2Dfa::Preprocessing(std::string_view str) {
                 while (j < str.size() && str[j] != ']') {
                     j++;
                 }
-                tokens.push_back({RegexTOKEN::ID, str.substr(i, j - i + 1)});
+                tokens.push_back({RegexTOKEN::ID, std::string(str.substr(i, j - i + 1))});
                 i = j + 1;
                 break;
             }
             default:
-                std::string strit{str[i]};
+                std::string strit(1, str[i]);
                 tokens.push_back({RegexTOKEN::ID, strit});
                 i++;
                 break;
@@ -129,12 +248,17 @@ int Regex2Dfa::NewNode() {
  */
 
 inline void Regex2Dfa::AddLar0Item(int loc, RegexTOKEN token, ChartItem item) {
-    lr0echart[loc][TokenId(token)].act = item.act;
-    lr0echart[loc][TokenId(token)].val = item.val;
+    ACTIONS[loc][TokenId(token)].act = item.act;
+    ACTIONS[loc][TokenId(token)].val = item.val;
+}
+
+inline void Regex2Dfa::AddGotoItem(int loc, RegexTOKEN token, unsigned int state) {
+    GOTOS[loc][TokenId(token)] = state;
 }
 
 void Regex2Dfa::InitTheChart() {
-    lr0echart = {20, std::vector<ChartItem>(20)};
+    ACTIONS = {20, std::vector<ChartItem>(20)};
+
     {
         AddLar0Item(0, RegexTOKEN::ID, {ACTION::SHIFT, 2});
         AddLar0Item(0, RegexTOKEN::LBRA, {ACTION::SHIFT, 7});
@@ -208,7 +332,7 @@ void Regex2Dfa::InitTheChart() {
         AddLar0Item(9, RegexTOKEN::OVER, {ACTION::REDUCE, 7});
     }
     {
-        AddLar0Item(10, RegexTOKEN::ID, {ACTION::SHIFT, 3});
+        AddLar0Item(10, RegexTOKEN::ID, {ACTION::REDUCE, 3});
         AddLar0Item(10, RegexTOKEN::OR, {ACTION::REDUCE, 3});
         AddLar0Item(10, RegexTOKEN::LBRA, {ACTION::REDUCE, 3});
         AddLar0Item(10, RegexTOKEN::RBRA, {ACTION::REDUCE, 3});
@@ -216,14 +340,14 @@ void Regex2Dfa::InitTheChart() {
 
     }
     {
-        AddLar0Item(11, RegexTOKEN::ID, {ACTION::SHIFT, 3});
-        AddLar0Item(11, RegexTOKEN::PLUS, {ACTION::REDUCE, 3});
-        AddLar0Item(11, RegexTOKEN::QUE, {ACTION::REDUCE, 3});
-        AddLar0Item(11, RegexTOKEN::MUL, {ACTION::REDUCE, 3});
-        AddLar0Item(11, RegexTOKEN::OR, {ACTION::REDUCE, 3});
-        AddLar0Item(11, RegexTOKEN::LBRA, {ACTION::REDUCE, 3});
-        AddLar0Item(11, RegexTOKEN::RBRA, {ACTION::REDUCE, 3});
-        AddLar0Item(11, RegexTOKEN::OVER, {ACTION::REDUCE, 3});
+        AddLar0Item(11, RegexTOKEN::ID, {ACTION::SHIFT, 8});
+        AddLar0Item(11, RegexTOKEN::PLUS, {ACTION::REDUCE, 8});
+        AddLar0Item(11, RegexTOKEN::QUE, {ACTION::REDUCE, 8});
+        AddLar0Item(11, RegexTOKEN::MUL, {ACTION::REDUCE, 8});
+        AddLar0Item(11, RegexTOKEN::OR, {ACTION::REDUCE, 8});
+        AddLar0Item(11, RegexTOKEN::LBRA, {ACTION::REDUCE, 8});
+        AddLar0Item(11, RegexTOKEN::RBRA, {ACTION::REDUCE, 8});
+        AddLar0Item(11, RegexTOKEN::OVER, {ACTION::REDUCE, 8});
     }
     {
         AddLar0Item(12, RegexTOKEN::ID, {ACTION::REDUCE, 6});
@@ -239,6 +363,27 @@ void Regex2Dfa::InitTheChart() {
         AddLar0Item(13, RegexTOKEN::OVER, {ACTION::REDUCE, 1});
     }
 
+
+    GOTOS = {20, std::vector<unsigned int>(20)};
+    {
+        AddGotoItem(0, RegexTOKEN::E, 3);
+        AddGotoItem(0, RegexTOKEN::F, 4);
+        AddGotoItem(0, RegexTOKEN::T, 10);
+    }
+    {
+        AddGotoItem(1, RegexTOKEN::F, 4);
+        AddGotoItem(1, RegexTOKEN::T, 8);
+    }
+    {
+        AddGotoItem(3, RegexTOKEN::F, 4);
+        AddGotoItem(3, RegexTOKEN::T, 8);
+    }
+    {
+        AddGotoItem(7, RegexTOKEN::E, 1);
+        AddGotoItem(7, RegexTOKEN::F, 4);
+        AddGotoItem(7, RegexTOKEN::T, 10);
+    }
+    AddGotoItem(9, RegexTOKEN::T, 13);
 }
 
 

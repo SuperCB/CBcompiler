@@ -5,10 +5,12 @@
 #ifndef CBCOMPILER_REGEX2DFA_H
 #define CBCOMPILER_REGEX2DFA_H
 
+#include <iostream>
 #include <string_view>
 #include <string>
 #include <vector>
 #include <stack>
+#include "dbg.h"
 
 enum class ACTION {
     SHIFT,
@@ -30,6 +32,7 @@ enum class RegexTOKEN {
     T,
     OVER
 };
+
 struct ChartItem {
     ACTION act;
     uint8_t val;
@@ -39,19 +42,20 @@ struct ChartItem {
     ChartItem(ACTION act_, uint8_t val_) : act(act_), val(val_) {
     };
 
-    ChartItem &operator=(const ChartItem &chartItem) {
-        act = chartItem.act;
-        val = chartItem.val;
-    };
+//    ChartItem &operator=(const ChartItem &chartItem) {
+//        act = chartItem.act;
+//        val = chartItem.val;
+//    };
 };
 
 struct Token {
     RegexTOKEN type;
-    std::string_view str;
+    std::string str;
 };
 
 class Regex2Dfa {
     using uint8 = uint8_t;
+    using uint = unsigned int;
 public:
     Regex2Dfa(std::string_view regexstr);
 
@@ -82,11 +86,14 @@ private:
     int idx;
     int *e, *ne, *h;
     const int size = 10000;
-    std::vector<std::vector<ChartItem>> lr0echart;
+    std::vector<std::vector<ChartItem>> ACTIONS;
+    std::vector<std::vector<unsigned int >> GOTOS;
 
     void AddLar0Item(int loc, RegexTOKEN token, ChartItem item);
 
     std::vector<Token> Preprocessing(std::string_view str);
+
+    void AddGotoItem(int loc, RegexTOKEN token, unsigned int state);
 };
 
 
