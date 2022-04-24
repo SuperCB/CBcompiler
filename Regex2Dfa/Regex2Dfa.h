@@ -16,12 +16,13 @@
 #include "dbg.h"
 #include "Graph.h"
 #include "DfaUtil.h"
+
 namespace DFA {
     class Regex2Dfa {
         using uint8 = uint8_t;
         using uint32 = unsigned int;
     public:
-        Regex2Dfa(std::string_view regexstr);
+        Regex2Dfa(std::string_view regexstr, std::shared_ptr<CBCompiler::Graph> graph_);
 
         Regex2Dfa(const Regex2Dfa &regex2Dfa) = delete;
 
@@ -57,16 +58,13 @@ namespace DFA {
         void Follows2Dfa(TranState root);
 
 
-        CBCompiler::Graph graph;
+        std::shared_ptr<CBCompiler::Graph> graph;
         unsigned int token_loc{0};//used when processing
         int graph_id{0};
         std::vector<std::vector<ChartItem>> ACTIONS;
         std::vector<std::vector<unsigned int >> GOTOS;
         std::unordered_map<unsigned int, std::set<uint32>> follows;
-        std::map<uint32 , Token> token_map;
-        std::map<uint32 , Token> id2token;
-
-
-        void GenerateRelation(int from, int to, const Token &token);
+        std::map<uint32, Token> token_map;
+        std::map<uint32, Token> id2token;
     };
 }

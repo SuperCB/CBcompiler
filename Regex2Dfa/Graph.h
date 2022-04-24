@@ -3,35 +3,49 @@
 //
 
 #pragma once
+#include "dbg.h"
 
-
+#include <cassert>
 #include <string>
-
+#include "DfaUtil.h"
+#include <cstring>
+#include <vector>
+#include <tuple>
+#include <iostream>
+#include <fstream>
 namespace CBCompiler {
 
-    struct LexEdge {
-        char ch;
-    };
-    struct YaccEdge {
-
-    };
 
 }
 
 namespace CBCompiler {
+
+
     class Graph {
     public:
-        Graph();
-        void addedge(int a, int b, char ch); // 添加一条边a->b
-        virtual ~Graph();
+        using uint = unsigned int;
 
+        Graph();
+
+        void GenerateRelation(int from, int to, const DFA::Token &token);
+
+        void AddEdge(int a, int b, char ch); // 添加一条边a->b
+        ~Graph();
+
+        inline void AddAcceptState(uint id) {
+            acc_states.insert(id);
+        };
+
+        inline unsigned int GetNewNodeId() {
+            return ++node_id;
+        }
+        void DrawDot(const std::string &outf);
     private:
-        const int N = 1000, M = 20000;
-        int *h;
-        int *e;
-        int *ne;
-        LexEdge  *edges;
-        unsigned int idx{1};
+        std::set<::uint> acc_states;
+        uint node_id;
+        std::vector<std::tuple<uint, uint, char>> charts;
+
+
     };
 }
 

@@ -142,7 +142,9 @@ namespace DFA {
         token_stack.push(token_F);
     }
 
-    Regex2Dfa::Regex2Dfa(std::string_view regexstr) {
+    Regex2Dfa::Regex2Dfa(std::string_view regexstr, std::shared_ptr<CBCompiler::Graph> graph_) : graph(
+            graph_) {
+
         InitTheChart();
         std::stack<uint32> states;
         std::stack<Token> token_stack;
@@ -251,22 +253,15 @@ namespace DFA {
                         // i should not use the set,i should use vector
                         follows[i].insert(token_loc);
                     }
-//                    for (auto [k, v]: follows) {
-//
-//                        std::cout << k << "  ";
-//                        for (auto i: v) {
-//                            std::cout << i << " ";
-//                        }
-//                        std::cout << std::endl;
-//                    }
-//                    std::cout << token_stack.size() << std::endl;
 
                     std::vector<int> root_state;
                     for (auto i: fin.firstpos) {
                         root_state.push_back(i);
                     }
-                    TranState root{++graph_id, false, root_state};
-
+                    if (fin.nullable) {
+                        root_state.push_back(token_loc);
+                    }
+                    TranState root{graph->GetNewNodeId(), false, root_state};
                     Follows2Dfa(root);
                     flag = true;
                     break;
@@ -501,12 +496,6 @@ namespace DFA {
 
 }
 
-void DFA::Regex2Dfa::GenerateRelation(int from, int to, const Token &token) {
-    for (auto &ch: token.parseToken()) {
-        graph.addedge(from, to, ch);
-    }
-}
-
 void DFA::Regex2Dfa::Follows2Dfa(TranState root) {
 
     std::function<bool(std::set<TranState>)> checkstates = [](std::set<TranState> state_set) -> bool {
@@ -523,6 +512,8 @@ void DFA::Regex2Dfa::Follows2Dfa(TranState root) {
 
     std::set<TranState> tran_sta_set;
     tran_sta_set.insert(root);
+
+
     while (!tran_sta_set.empty()) {
 
         auto iterator = tran_sta_set.begin();
@@ -541,10 +532,10 @@ void DFA::Regex2Dfa::Follows2Dfa(TranState root) {
         for (auto &loc: S.states) {
 
             auto token = id2token[loc];
-            if (token.str.size() == 0)std::cout << loc;
             if (token.type == TOKENTYPE::OVER) {
                 //if the state can tranfer to end state,so we can get mark this state as accept state
-                S.accpet = true;
+                dbg(S.states, "is the accpet state");
+                graph->AddAcceptState(S.id);
                 continue;
             }
             if (U_map.count(token) == 0) {
@@ -566,17 +557,13 @@ void DFA::Regex2Dfa::Follows2Dfa(TranState root) {
             states.assign(unions.begin(), unions.end());
             TranState new_trans{0, false, states};
             if (tran_sta_set.count(new_trans) == 0) {
-
-                new_trans.id = ++graph_id;
+                new_trans.id = graph->GetNewNodeId();
                 tran_sta_set.insert(new_trans);
-
             } else {
                 new_trans.id = tran_sta_set.find(new_trans)->id;
             }
-
-
             dbg(S.states, "->", new_trans.states, token.str, "\n\n\n");
-            GenerateRelation(S.id, new_trans.id, token);
+            graph->GenerateRelation(S.id, new_trans.id, token);
         }
     }
 }

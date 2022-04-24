@@ -4,6 +4,9 @@
 #pragma once
 #include <utility>
 #include <vector>
+#include <set>
+#include <functional>
+
 namespace DFA {
     enum class ACTION {
         SHIFT,
@@ -62,12 +65,11 @@ namespace DFA{
 
     class TranState {
     public:
-        int id;//for generating the graph
+        uint id;//for generating the graph
         bool flag;
         std::vector<int> states;
-        bool accpet;
-        TranState():id(0),flag(false),states({}),accpet(false) {};
-        TranState(int id_,bool flag_,std::vector<int>states_):id(id_),flag(flag_),states(std::move(states_)),accpet(false) {};
+        TranState():id(0),flag(false),states({}){};
+        TranState(uint id_,bool flag_,std::vector<int>states_):id(id_),flag(flag_),states(std::move(states_)) {};
 
         bool operator<(const TranState &r) const {
             std::function<int(std::vector<int>)> vec2va = [](std::vector<int> vec) -> int {
