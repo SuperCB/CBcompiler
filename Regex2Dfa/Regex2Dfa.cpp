@@ -5,7 +5,7 @@
 #include "Regex2Dfa.h"
 
 namespace DFA {
-    void Regex2Dfa::OperBNF1(std::stack<uint> &states, std::stack<Token> &token_stack) {
+    void Regex2Dfa::OperBNF1(std::stack<uint32> &states, std::stack<Token> &token_stack) {
         states.pop();
         auto token_T = token_stack.top();
         token_stack.pop();
@@ -16,7 +16,7 @@ namespace DFA {
         states.pop();
         auto token_E = token_stack.top();
         token_stack.pop();
-        uint new_state = GOTOS[states.top()][static_cast<int>(TOKENTYPE::E)];
+        uint32 new_state = GOTOS[states.top()][static_cast<int>(TOKENTYPE::E)];
         states.push(new_state);
 
         auto firstpos = token_E.firstpos;
@@ -32,7 +32,7 @@ namespace DFA {
         token_stack.push(token);
     }
 
-    void Regex2Dfa::OperBNF2(std::stack<uint> &states, std::stack<Token> &token_stack) {
+    void Regex2Dfa::OperBNF2(std::stack<uint32> &states, std::stack<Token> &token_stack) {
 //    dbg("E-> ET");
 
         states.pop();
@@ -74,7 +74,7 @@ namespace DFA {
         token_stack.push(token);
     }
 
-    void Regex2Dfa::OperBNF4(std::stack<uint> &states, std::stack<Token> &token_stack) {
+    void Regex2Dfa::OperBNF4(std::stack<uint32> &states, std::stack<Token> &token_stack) {
         //"T-> F+"
         states.pop();
         token_stack.pop();
@@ -98,7 +98,7 @@ namespace DFA {
         token_stack.push(token_F);
     }
 
-    void Regex2Dfa::OperBNF5(std::stack<uint> &states, std::stack<Token> &token_stack) {
+    void Regex2Dfa::OperBNF5(std::stack<uint32> &states, std::stack<Token> &token_stack) {
         //"T-> F*"
         states.pop();
         token_stack.pop();
@@ -124,7 +124,7 @@ namespace DFA {
         token_stack.push(token_F);
     }
 
-    void Regex2Dfa::OperBNF6(std::stack<uint> &states, std::stack<Token> &token_stack) {
+    void Regex2Dfa::OperBNF6(std::stack<uint32> &states, std::stack<Token> &token_stack) {
         //T->F?
         states.pop();
         token_stack.pop();
@@ -144,7 +144,7 @@ namespace DFA {
 
     Regex2Dfa::Regex2Dfa(std::string_view regexstr) {
         InitTheChart();
-        std::stack<uint> states;
+        std::stack<uint32> states;
         std::stack<Token> token_stack;
         std::vector<Token> tokens = Preprocessing(regexstr);
         //the end of the sentence
@@ -153,13 +153,13 @@ namespace DFA {
         states.push(0);
 
         bool flag = false;
-        uint tokeni = 0;
+        uint32 tokeni = 0;
         while (tokeni < tokens.size()) {
             auto token = tokens[tokeni];
 //        std::cout << token.str << std::endl;
             TOKENTYPE token_type = token.type;
-            uint top = states.top();
-            ChartItem item = ACTIONS[top][static_cast<uint>(token_type)];
+            uint32 top = states.top();
+            ChartItem item = ACTIONS[top][static_cast<uint32>(token_type)];
             switch (item.act) {
                 case ACTION::SHIFT:
                     states.push(item.val);
@@ -167,7 +167,7 @@ namespace DFA {
                     tokeni++;
                     break;
                 case ACTION::REDUCE: {
-                    uint new_state{};
+                    uint32 new_state{};
                     switch (item.val) {
                         case 1:
                             OperBNF1(states, token_stack);
@@ -244,9 +244,12 @@ namespace DFA {
                 case ACTION::ACCPET: {
                     dbg("success");
                     auto fin = token_stack.top();
+                    ++token_loc;
+                    id2token[token_loc] = Token{TOKENTYPE::OVER, ""};
+
                     for (auto i: fin.lastpos) {
                         // i should not use the set,i should use vector
-                        follows[i].insert(++token_loc);
+                        follows[i].insert(token_loc);
                     }
 //                    for (auto [k, v]: follows) {
 //
@@ -327,8 +330,7 @@ namespace DFA {
                     ++token_loc;
 
                     Token token{TOKENTYPE::ID, std::string(str.substr(i, j - i + 1)), token_loc};
-                    token_map[token_loc] = token;
-
+                    id2token.insert({token_loc, token});
 
                     token.firstpos.insert(token_loc);
                     token.lastpos.insert(token_loc);
@@ -341,10 +343,9 @@ namespace DFA {
                     std::string strit(1, str[i]);
                     //initial the followpos
 
-                    follows[token_loc].insert({});
                     ++token_loc;
                     Token token{TOKENTYPE::ID, strit, token_loc};
-                    token_map[token_loc] = token;
+                    id2token.insert({token_loc, token});
 
                     token.firstpos.insert(token_loc);
                     token.lastpos.insert(token_loc);
@@ -528,7 +529,7 @@ void DFA::Regex2Dfa::Follows2Dfa(TranState root) {
         // get the unmarked state
 
         while (iterator != tran_sta_set.end() && iterator->flag)++iterator;
-        if(iterator==tran_sta_set.end())break;
+        if (iterator == tran_sta_set.end())break;
         auto S = *iterator;
 
         S.flag = true;
@@ -538,12 +539,20 @@ void DFA::Regex2Dfa::Follows2Dfa(TranState root) {
         std::map<Token, std::set<int>> U_map{};
         // get all union of input token
         for (auto &loc: S.states) {
-            auto token = token_map[loc];
+
+            auto token = id2token[loc];
+            if (token.str.size() == 0)std::cout << loc;
+            if (token.type == TOKENTYPE::OVER) {
+                //if the state can tranfer to end state,so we can get mark this state as accept state
+                S.accpet = true;
+                continue;
+            }
             if (U_map.count(token) == 0) {
                 U_map.insert({token, {loc}});
             } else {
                 U_map[token].insert(loc);
             }
+
         }
         for (auto [token, token_locs]: U_map) {
 //            dbg(token.str);
@@ -557,14 +566,16 @@ void DFA::Regex2Dfa::Follows2Dfa(TranState root) {
             states.assign(unions.begin(), unions.end());
             TranState new_trans{0, false, states};
             if (tran_sta_set.count(new_trans) == 0) {
+
                 new_trans.id = ++graph_id;
                 tran_sta_set.insert(new_trans);
+
             } else {
                 new_trans.id = tran_sta_set.find(new_trans)->id;
             }
 
 
-            dbg(S.states,"->",new_trans.states,token.str,"\n\n\n");
+            dbg(S.states, "->", new_trans.states, token.str, "\n\n\n");
             GenerateRelation(S.id, new_trans.id, token);
         }
     }
