@@ -9,6 +9,7 @@
 #include <memory>
 #include <string>
 #include "src/Regex2Dfa/Regex2Dfa.h"
+#include "src/Parser/CBison.h"
 #include "include/json.hpp"
 
 using namespace std;
@@ -22,11 +23,7 @@ int main() {
 //    graph->DrawDot("cb.dot");
 //    return 0;
 // read a JSON file
-    std::ifstream i("/home/supercb/mycode/CppProjects/CBcompiler/cb.json");
-    json j;
-    i >> j;
-    auto c = j.find("afds");
-    if (c == j.end())
-        cout << "das";
+    CBCompiler::CBison cBison("/home/supercb/mycode/CppProjects/CBcompiler/new.json");
+
 
 }
