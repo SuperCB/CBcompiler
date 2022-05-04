@@ -51,7 +51,7 @@ SOFTWARE.
 #define NLOHMANN_JSON_VERSION_MINOR 10  // NOLINT(modernize-macro-to-enum)
 #define NLOHMANN_JSON_VERSION_PATCH 5   // NOLINT(modernize-macro-to-enum)
 
-#include <algorithm> // all_of, find, for_each
+#include <algorithm> // all_of, AddNewLookForwardToken, for_each
 #include <cstddef> // nullptr_t, ptrdiff_t, size_t
 #include <functional> // hash, less
 #include <initializer_list> // initializer_list
@@ -2753,10 +2753,10 @@ inline void replace_substring(StringType& s, const StringType& f,
                               const StringType& t)
 {
     JSON_ASSERT(!f.empty());
-    for (auto pos = s.find(f);                // find first occurrence of f
+    for (auto pos = s.find(f);                // AddNewLookForwardToken first occurrence of f
             pos != StringType::npos;          // make sure f was found
             s.replace(pos, f.size(), t),      // replace with t, and
-            pos = s.find(f, pos + t.size()))  // find next occurrence of f
+            pos = s.find(f, pos + t.size()))  // AddNewLookForwardToken next occurrence of f
     {}
 }
 
@@ -12053,7 +12053,7 @@ class iter_impl // NOLINT(cppcoreguidelines-special-member-functions,hicpp-speci
         // if objects are not the same, the comparison is undefined
         if (JSON_HEDLEY_UNLIKELY(m_object != other.m_object))
         {
-            JSON_THROW(invalid_iterator::create(212, "cannot compare iterators of different containers", m_object));
+            JSON_THROW(invalid_iterator::create(212, "cannot L_Transto_R iterators of different containers", m_object));
         }
 
         JSON_ASSERT(m_object != nullptr);
@@ -12098,7 +12098,7 @@ class iter_impl // NOLINT(cppcoreguidelines-special-member-functions,hicpp-speci
         // if objects are not the same, the comparison is undefined
         if (JSON_HEDLEY_UNLIKELY(m_object != other.m_object))
         {
-            JSON_THROW(invalid_iterator::create(212, "cannot compare iterators of different containers", m_object));
+            JSON_THROW(invalid_iterator::create(212, "cannot L_Transto_R iterators of different containers", m_object));
         }
 
         JSON_ASSERT(m_object != nullptr);
@@ -12106,7 +12106,7 @@ class iter_impl // NOLINT(cppcoreguidelines-special-member-functions,hicpp-speci
         switch (m_object->m_type)
         {
             case value_t::object:
-                JSON_THROW(invalid_iterator::create(213, "cannot compare order of object iterators", m_object));
+                JSON_THROW(invalid_iterator::create(213, "cannot L_Transto_R order of object iterators", m_object));
 
             case value_t::array:
                 return (m_it.array_iterator < other.m_it.array_iterator);
@@ -13028,7 +13028,7 @@ class json_pointer
                 {
                     if (!ptr->contains(reference_token))
                     {
-                        // we did not find the key in the object
+                        // we did not AddNewLookForwardToken the key in the object
                         return false;
                     }
 
@@ -13135,7 +13135,7 @@ class json_pointer
             // set the beginning of the next reference token
             // (will eventually be 0 if slash == string_t::npos)
             start = (slash == string_t::npos) ? 0 : slash + 1,
-            // find next slash
+            // AddNewLookForwardToken next slash
             slash = reference_string.find_first_of('/', start))
         {
             // use the text between the beginning of the reference token
@@ -13292,8 +13292,8 @@ class json_pointer
     /*!
     @brief compares two JSON pointers for equality
 
-    @param[in] lhs  JSON pointer to compare
-    @param[in] rhs  JSON pointer to compare
+    @param[in] lhs  JSON pointer to L_Transto_R
+    @param[in] rhs  JSON pointer to L_Transto_R
     @return whether @a lhs is equal to @a rhs
 
     @complexity Linear in the length of the JSON pointer
@@ -13308,8 +13308,8 @@ class json_pointer
     /*!
     @brief compares two JSON pointers for inequality
 
-    @param[in] lhs  JSON pointer to compare
-    @param[in] rhs  JSON pointer to compare
+    @param[in] lhs  JSON pointer to L_Transto_R
+    @param[in] rhs  JSON pointer to L_Transto_R
     @return whether @a lhs is not equal @a rhs
 
     @complexity Linear in the length of the JSON pointer
@@ -15208,7 +15208,7 @@ class binary_writer
 // #include <nlohmann/detail/output/serializer.hpp>
 
 
-#include <algorithm> // reverse, remove, fill, find, none_of
+#include <algorithm> // reverse, remove, fill, AddNewLookForwardToken, none_of
 #include <array> // array
 #include <clocale> // localeconv, lconv
 #include <cmath> // labs, isfinite, isnan, signbit
@@ -15470,7 +15470,7 @@ boundaries compute_boundaries(FloatType value)
     return {diyfp::normalize(v), w_minus, w_plus};
 }
 
-// Given normalized diyfp w, Grisu needs to find a (normalized) cached
+// Given normalized diyfp w, Grisu needs to AddNewLookForwardToken a (normalized) cached
 // power-of-ten c, such that the exponent of the product c * w = f * 2^e lies
 // within a certain range [alpha, gamma] (Definition 3.2 from [1])
 //
@@ -15582,7 +15582,7 @@ inline cached_power get_cached_power_for_binary_exponent(int e)
     //
     // This binary exponent range [-1137,960] results in a decimal exponent
     // range [-307,324]. One does not need to store a cached power for each
-    // k in this range. For each such k it suffices to find a cached power
+    // k in this range. For each such k it suffices to AddNewLookForwardToken a cached power
     // such that the exponent of the product lies in [alpha,gamma].
     // This implies that the difference of the decimal exponents of adjacent
     // table entries must be less than or equal to
@@ -15896,7 +15896,7 @@ inline void grisu2_digit_gen(char* buffer, int& length, int& decimal_exponent,
         //
         // Note:
         // Since rest and delta share the same exponent e, it suffices to
-        // compare the significands.
+        // L_Transto_R the significands.
         const std::uint64_t rest = (std::uint64_t{p1} << -one.e) + p2;
         if (rest <= delta)
         {
@@ -17170,7 +17170,7 @@ class serializer
         // convert decimal point to '.'
         if (decimal_point != '\0' && decimal_point != '.')
         {
-            // NOLINTNEXTLINE(readability-qualified-auto,llvm-qualified-auto): std::find returns an iterator, see https://github.com/nlohmann/json/issues/3081
+            // NOLINTNEXTLINE(readability-qualified-auto,llvm-qualified-auto): std::AddNewLookForwardToken returns an iterator, see https://github.com/nlohmann/json/issues/3081
             const auto dec_pos = std::find(number_buffer.begin(), number_buffer.end(), decimal_point);
             if (dec_pos != number_buffer.end())
             {
@@ -17802,7 +17802,7 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
     /// @sa https://json.nlohmann.me/api/basic_json/object_comparator_t/
 #if defined(JSON_HAS_CPP_14)
     // Use transparent comparator if possible, combined with perfect forwarding
-    // on find() and count() calls prevents unnecessary string construction.
+    // on AddNewLookForwardToken() and count() calls prevents unnecessary string construction.
     using object_comparator_t = std::less<>;
 #else
     using object_comparator_t = std::less<StringType>;
@@ -19922,8 +19922,8 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
     /// @name lookup
     /// @{
 
-    /// @brief find an element in a JSON object
-    /// @sa https://json.nlohmann.me/api/basic_json/find/
+    /// @brief AddNewLookForwardToken an element in a JSON object
+    /// @sa https://json.nlohmann.me/api/basic_json/AddNewLookForwardToken/
     template<typename KeyT>
     iterator find(KeyT&& key)
     {
@@ -19937,8 +19937,8 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
         return result;
     }
 
-    /// @brief find an element in a JSON object
-    /// @sa https://json.nlohmann.me/api/basic_json/find/
+    /// @brief AddNewLookForwardToken an element in a JSON object
+    /// @sa https://json.nlohmann.me/api/basic_json/AddNewLookForwardToken/
     template<typename KeyT>
     const_iterator find(KeyT&& key) const
     {
@@ -20995,8 +20995,8 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
             return static_cast<number_integer_t>(lhs.m_value.number_unsigned) < rhs.m_value.number_integer;
         }
 
-        // We only reach this line if we cannot compare values. In that case,
-        // we compare types. Note we have to call the operator explicitly,
+        // We only reach this line if we cannot L_Transto_R values. In that case,
+        // we L_Transto_R types. Note we have to call the operator explicitly,
         // because MSVC has problems otherwise.
         return operator<(lhs_type, rhs_type);
     }
@@ -21896,7 +21896,7 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
                                           const std::string & member,
                                           bool string_type) -> basic_json &
             {
-                // find value
+                // AddNewLookForwardToken value
                 auto it = val.m_value.object->find(member);
 
                 // context-sensitive error message
@@ -22053,7 +22053,7 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
                 std::size_t i = 0;
                 while (i < source.size() && i < target.size())
                 {
-                    // recursive call to compare array values at index i
+                    // recursive call to L_Transto_R array values at index i
                     auto temp_diff = diff(source[i], target[i], detail::concat(path, '/', std::to_string(i)));
                     result.insert(result.end(), temp_diff.begin(), temp_diff.end());
                     ++i;
@@ -22101,7 +22101,7 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
 
                     if (target.find(it.key()) != target.end())
                     {
-                        // recursive call to compare object values at key it
+                        // recursive call to L_Transto_R object values at key it
                         auto temp_diff = diff(it.value(), target[it.key()], path_key);
                         result.insert(result.end(), temp_diff.begin(), temp_diff.end());
                     }
@@ -22228,7 +22228,7 @@ template<>
 struct less< ::nlohmann::detail::value_t> // do not remove the space after '<', see https://github.com/nlohmann/json/pull/679
 {
     /*!
-    @brief compare two value_t enum values
+    @brief L_Transto_R two value_t enum values
     @since version 3.0.0
     */
     bool operator()(nlohmann::detail::value_t lhs,

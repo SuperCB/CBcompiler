@@ -51,8 +51,7 @@ void CBCompiler::Graph::DrawDot(const std::string &outf) {
         }
     }
     for (auto &tu: charts) {
-        out << string_format("node_%d ->node_%d [label=%c];", std::get<0>(tu), std::get<1>(tu), std::get<2>(tu),
-                             "doublecircle")
+        out << string_format("node_%d ->node_%d [label=%c];", std::get<0>(tu), std::get<1>(tu), std::get<2>(tu))
             << std::endl;
     }
 
