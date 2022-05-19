@@ -457,7 +457,7 @@ namespace CBCompiler {
 
         }
         {
-            AddLar0Item(11, TOKENTYPE::ID, {ACTION::SHIFT, 8});
+            AddLar0Item(11, TOKENTYPE::ID, {ACTION::REDUCE, 8});
             AddLar0Item(11, TOKENTYPE::PLUS, {ACTION::REDUCE, 8});
             AddLar0Item(11, TOKENTYPE::QUE, {ACTION::REDUCE, 8});
             AddLar0Item(11, TOKENTYPE::MUL, {ACTION::REDUCE, 8});
