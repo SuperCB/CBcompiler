@@ -23,14 +23,15 @@ CBCompiler::LALR::LALR(std::string_view addr) {
         expressions.insert({lv, {}});
     }
     // second get all endtoken
+    ::uint expressionid = 0;
+
     for (auto iter = bnfs.begin(); iter != bnfs.end(); ++iter) {
         if (iter == rootExpr)continue;
         auto rv = iter.value();
-        auto exprlist = rv["values"];
-        for (auto exiter = exprlist.begin(); exiter != exprlist.end(); ++exiter) {
+        auto valist = rv["rval"];
+        for (auto exiter = valist.begin(); exiter != valist.end(); ++exiter) {
             std::vector<LRToken> lrtokens;
-            for (auto exi = exiter.value().begin(); exi != exiter.value().end(); ++exi) {
-
+            for (auto exi = exiter.value()["val"].begin(); exi != exiter.value()["val"].end(); ++exi) {
                 std::string little_expr = exi.value();
                 LRType type_;
                 if (expressions.count(little_expr) == 0) {
@@ -41,7 +42,8 @@ CBCompiler::LALR::LALR(std::string_view addr) {
                 dbg(little_expr);
                 lrtokens.emplace_back(type_, little_expr);
             }
-            expressions[iter.key()].push_back(std::move(lrtokens));
+            expression_action[++expressionid] = exiter.value()["act"];
+            expressions[iter.key()].push_back({std::move(lrtokens), expressionid});
         }
     }
     GetLR0groups();
@@ -50,16 +52,16 @@ CBCompiler::LALR::LALR(std::string_view addr) {
 
 void CBCompiler::LALR::GetLR0groups() {
 
-    CBCompiler::LRItem root("root", {{LRType::UNEND, rootstr}}, 0);
+    // 第0项代表着根项，也就是会发生accept动作的这一项
+
+    CBCompiler::LRItem root("root", {{LRType::UNEND, rootstr}}, 0, 0);
 
     LR0group *sta = new LR0group({root});
     std::queue<CBCompiler::LR0group *> que;
 
     sta->id = lr0_group_id++;
-
     que.push(sta);//jia ru zengguangwenfa
     groups.emplace_back(sta);
-
     while (!que.empty()) {
         auto top_lro_group = que.front();
         que.pop();
@@ -83,12 +85,9 @@ void CBCompiler::LALR::GetLR0groups() {
             }
             LR0group *ne_lr0_group = new LR0group(n_group_cores);
             GenerateNewLr0Group(ne_lr0_group, que);
-
-
             AddEdge(top_lro_group->id, ne_lr0_group->id, k);
         }
     }
-
     {
         auto cmp = [](LR0group *l, LR0group *r) -> bool {
             return l->id < r->id;
@@ -112,13 +111,13 @@ std::vector<CBCompiler::LRItem> CBCompiler::LALR::GetLR0Closure(const std::vecto
         LRToken token;
         bool flag = top.TokenAfterPos(token);
         if (!flag) {
-//            dbg("Accept ");
+            dbg("Accept ");
         } else {
-            if (token.IsUnend()) {
-//                dbg("unend token", token.str);
-                for (auto &expres: expressions[token.str]) {
-                    LRItem tlr0item{token.str, expres, 0};
 
+            if (token.IsUnend()) {
+                dbg("unend token", token.str);
+                for (auto &expres: expressions[token.str]) {
+                    LRItem tlr0item{token.str, expres.expression, 0, expres.id};
                     if (!lr0items.find(tlr0item)) {
                         itemsque.push(tlr0item);
                         lr0items.push_back(tlr0item);
@@ -128,6 +127,7 @@ std::vector<CBCompiler::LRItem> CBCompiler::LALR::GetLR0Closure(const std::vecto
                 continue;
             }
         }
+
     }
     return lr0items.items;
 }
@@ -236,9 +236,10 @@ std::set<std::string> CBCompiler::LALR::GetFirst(const CBCompiler::LRToken &toke
         return {token.str};
     }
     std::set<std::string> res;
+
     auto rexpres = expressions[token.str];
     for (auto &tokens: rexpres) {
-        auto token = tokens[0];
+        auto token = tokens.expression[0];
         if (token.type == LRType::UNEND) {
             auto first = GetFirst(token);
             res.insert(first.begin(), first.end());
@@ -304,7 +305,7 @@ std::vector<CBCompiler::LRItem> CBCompiler::LALR::GetLR1Closure(const LRItem &co
         if (!flag) {
         } else {
             if (token.IsUnend()) {
-                for (auto &i: expressions[token.str]) {
+                for (auto &expressinfo: expressions[token.str]) {
                     LRToken token2;
                     bool flag = top.TokenTwoAfterPos(token2);
                     std::vector<LRToken> belta_a;
@@ -314,10 +315,12 @@ std::vector<CBCompiler::LRItem> CBCompiler::LALR::GetLR1Closure(const LRItem &co
                         auto first_set = GetFirst(token2);
                         look_forward.insert(first_set.begin(), first_set.end());
                     } else {
-                        // i
+                        // expressinfo
                         look_forward = top.look_forward;
                     }
-                    LRItem belta_item{token.str, i, 0};
+
+                    LRItem belta_item{token.str, expressinfo.expression, 0, expressinfo.id};
+
                     belta_item.look_forward = look_forward;
                     if (!lr1_items.find(belta_item)) {
                         itemsque.push(belta_item);
@@ -376,6 +379,7 @@ void CBCompiler::LALR::DrawLALR(std::string outf) {
     out << "}" << std::endl;
     out.close();
 }
+
 
 
 

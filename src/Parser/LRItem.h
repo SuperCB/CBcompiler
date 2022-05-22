@@ -56,14 +56,7 @@ namespace CBCompiler {
         std::set<std::string> look_forward;
         std::set<std::string> temp;
 
-//        /**
-//         * weird copy construct function
-//         * @param lr_item
-//         */
-//        LRItem(const LRItem &lr_item) : lv(lr_item.lv), rexprs(lr_item.rexprs), ploc(lr_item.ploc), core(lr_item.core),
-//                                         temp({}) ,look_forward(temp){
-//        }
-
+        uint expression_id;
 
         std::string to_string() {
             std::string str = lv;
@@ -98,10 +91,12 @@ namespace CBCompiler {
             ++ploc;
         }
 
-        LRItem(std::string lv_, std::vector<LRToken> rexprs_, int pointloc_) : lv(std::move(lv_)),
-                                                                               rexprs(std::move(rexprs_)),
-                                                                               ploc(pointloc_), core(false),
-                                                                               look_forward({}),temp({}) {};
+        LRItem(std::string lv_, std::vector<LRToken> rexprs_, int pointloc_, uint expreid) : lv(std::move(lv_)),
+                                                                                             rexprs(std::move(rexprs_)),
+                                                                                             ploc(pointloc_),
+                                                                                             core(false),
+                                                                                             look_forward({}), temp({}),
+                                                                                             expression_id(expreid) {};
 
 
         bool TokenAfterPos(LRToken &lrToken) const {
@@ -115,7 +110,7 @@ namespace CBCompiler {
 
         bool TokenTwoAfterPos(LRToken &lrToken) const {
             assert(ploc <= rexprs.size());
-            if (ploc + 1 >=rexprs.size()) {
+            if (ploc + 1 >= rexprs.size()) {
                 return false;
             }
             lrToken = rexprs[ploc + 1];

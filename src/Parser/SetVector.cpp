@@ -25,7 +25,7 @@ namespace CBCompiler {
            if(find(item))
                continue;
            else
-               items.template emplace_back(item);
+               items.emplace_back(item);
        }
     }
 } // CBCompiler

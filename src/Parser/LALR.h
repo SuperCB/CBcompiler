@@ -14,11 +14,17 @@
 #include <queue>
 #include "LRItem.h"
 #include "SetVector.h"
+#include <vector>
 
 using json = nlohmann::json;
 
 namespace CBCompiler {
 
+
+    struct ExpressionInfor {
+        std::vector<LRToken> expression;
+        uint id;
+    };
 
     class LALR {
         using uint = unsigned int;
@@ -56,11 +62,17 @@ namespace CBCompiler {
 
 
         std::unordered_map<std::string, std::vector<LRToken>> first;
-        std::unordered_map<std::string, std::vector<std::vector<LRToken>>> expressions;
+        std::unordered_map<std::string, std::vector<ExpressionInfor>> expressions;
+        std::unordered_map<::uint, std::string> expression_action;
+
+
         std::vector<std::tuple<uint, uint, LRToken>> trans_chart;
+
+
         std::string rootstr;
         std::vector<LR0group *> groups;
         unsigned int lr0_group_id{0};
+
         bool closure;
 
 
