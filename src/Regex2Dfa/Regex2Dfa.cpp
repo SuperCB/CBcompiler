@@ -3,7 +3,8 @@
 //
 
 #include "Regex2Dfa.h"
-
+#include <cassert>
+#include <fstream>
 namespace CBCompiler {
     void Regex2Dfa::OperBNF1(std::stack<uint32> &states, std::stack<Token> &token_stack) {
         states.pop();
@@ -142,14 +143,17 @@ namespace CBCompiler {
         token_stack.push(token_F);
     }
 
-    Regex2Dfa::Regex2Dfa(std::string_view regexstr, std::shared_ptr<CBCompiler::Graph> graph_) : graph(graph_) {
+    Regex2Dfa::Regex2Dfa(std::string_view regexstr):node_id(0) {
 
         InitTheChart();
         std::stack<uint32> states;
         std::stack<Token> token_stack;
         std::vector<Token> tokens = Preprocessing(regexstr);
         //the end of the sentence
-        tokens.push_back({TOKENTYPE::OVER, "$", token_loc});
+        tokens.push_back({TOKENTYPE::OVER, '$', token_loc});
+
+
+
         // push the initial state
         states.push(0);
 
@@ -246,7 +250,7 @@ namespace CBCompiler {
                     dbg("success");
                     auto fin = token_stack.top();
                     ++token_loc;
-                    id2token[token_loc] = Token{TOKENTYPE::OVER, ""};
+                    id2token[token_loc] = Token{TOKENTYPE::OVER, ' '};
 
                     for (auto i: fin.lastpos) {
                         // i should not use the set,i should use vector
@@ -268,7 +272,7 @@ namespace CBCompiler {
                     if (fin.nullable) {
                         root_state.push_back(token_loc);
                     }
-                    TranState root{graph->GetNewNodeId(), false, root_state};
+                    TranState root{GetNewNodeId(), false, root_state};
                     Follows2Dfa(root);
                     flag = true;
                     break;
@@ -285,6 +289,16 @@ namespace CBCompiler {
 
     }
 
+    void Regex2Dfa::AddNewID(std::vector<Token> &tokens, char ch) {
+        Token token{TOKENTYPE::ID, ch, token_loc};
+        follows.insert({token_loc, {}});
+        id2token.insert({token_loc, token});
+        token.firstpos.insert(token_loc);
+        token.lastpos.insert(token_loc);
+        tokens.emplace_back(token);
+        ++token_loc;
+    }
+
     std::vector<Token> Regex2Dfa::Preprocessing(std::string_view str) {
         std::vector<Token> tokens;
         int i = 0;
@@ -292,66 +306,120 @@ namespace CBCompiler {
             char ch = str.at(i);
             switch (ch) {
                 case '(':
-                    tokens.push_back({TOKENTYPE::LBRA, "("});
+                    tokens.push_back({TOKENTYPE::LBRA, '('});
                     i++;
                     break;
                 case ')':
-                    tokens.push_back({TOKENTYPE::RBRA, ")"});
+                    tokens.push_back({TOKENTYPE::RBRA, ')'});
                     i++;
                     break;
                 case '+':
-                    tokens.push_back({TOKENTYPE::PLUS, "+"});
+                    tokens.push_back({TOKENTYPE::PLUS, '+'});
                     i++;
                     break;
                 case '*':
-                    tokens.push_back({TOKENTYPE::MUL, "*"});
+                    tokens.push_back({TOKENTYPE::MUL, '*'});
                     i++;
                     break;
                 case '?':
-                    tokens.push_back({TOKENTYPE::QUE, "?"});
+                    tokens.push_back({TOKENTYPE::QUE, '?'});
                     i++;
                     break;
                 case '|':
-                    tokens.push_back({TOKENTYPE::OR, "|"});
+                    tokens.push_back({TOKENTYPE::OR, '|'});
                     i++;
                     break;
                 case '\\':
-                    tokens.push_back({TOKENTYPE::ID, &"\\"[str[i + 1]]});
+                    assert(i + 1 < str.size());
+                    tokens.push_back({TOKENTYPE::LBRA, '('});
+                    switch (str[i + 1]) {
+                        case 'd': {
+                            for (char chi = '0'; chi <= '9'; ++chi) {
+                                AddNewID(tokens, chi);
+                                tokens.push_back({TOKENTYPE::OR, '|'});
+                            }
+                            break;
+                        }
+                        case 'w': {
+                            for (char chi = '0'; chi <= '9'; ++chi) {
+                                AddNewID(tokens, chi);
+                                tokens.push_back({TOKENTYPE::OR, '|'});
+                            }
+                            for (char chi = 'a'; chi <= 'z'; ++chi) {
+                                AddNewID(tokens, chi);
+                                tokens.push_back({TOKENTYPE::OR, '|'});
+                            }
+                            for (char chi = 'A'; chi <= 'Z'; ++chi) {
+                                AddNewID(tokens, chi);
+                                tokens.push_back({TOKENTYPE::OR, '|'});
+                            }
+                            break;
+                        }
+                        default: {
+                            AddNewID(tokens, str[i + 1]);
+                            tokens.push_back({TOKENTYPE::OR, '|'});
+                            break;
+                        }
+                    }
+                    tokens.pop_back();
+                    tokens.push_back({TOKENTYPE::RBRA, ')'});
                     i += 2;
                     break;
                 case '[': {
-                    i++;
-                    int j = i;
-                    j++;
+                    int j = i + 1;
+                    tokens.push_back({TOKENTYPE::LBRA, '('});
                     while (j < str.size() && str[j] != ']') {
+                        if (j + 1 < str.size() && str[j + 1] == '-') {
+                            assert(j + 2 < str.size());
+                            char begin = str[j];
+                            char end = str[j + 2];
+                            for (; begin <= end; ++begin) {
+                                AddNewID(tokens, begin);
+                                tokens.push_back({TOKENTYPE::OR, '|'});
+                            }
+                            j += 3;
+                            continue;
+                        }
+                        if (str[j] == '\\') {
+                            assert(j + 1 < str.size());
+                            switch (str[j + 1]) {
+                                case 'd': {
+                                    for (char chi = '0'; chi <= '9'; ++chi) {
+                                        AddNewID(tokens, chi);
+                                        tokens.push_back({TOKENTYPE::OR, '|'});
+                                    }
+                                    break;
+                                }
+                                case 'w': {
+                                    for (char chi = '0'; chi <= '9'; ++chi) {
+                                        AddNewID(tokens, chi);
+                                        tokens.push_back({TOKENTYPE::OR, '|'});
+                                    }
+                                    for (char chi = 'a'; chi <= 'z'; ++chi) {
+                                        AddNewID(tokens, chi);
+                                        tokens.push_back({TOKENTYPE::OR, '|'});
+                                    }
+                                    for (char chi = 'A'; chi <= 'Z'; ++chi) {
+                                        AddNewID(tokens, chi);
+                                        tokens.push_back({TOKENTYPE::OR, '|'});
+                                    }
+                                    break;
+                                }
+                            }
+                            j += 2;
+                            continue;
+                        }
+                        AddNewID(tokens, str[j]);
+                        tokens.push_back({TOKENTYPE::OR, '|'});
                         j++;
                     }
-
-                    //initial the followpos
-                    follows[token_loc].insert({});
-                    ++token_loc;
-
-                    Token token{TOKENTYPE::ID, std::string(str.substr(i, j - i + 1)), token_loc};
-                    id2token.insert({token_loc, token});
-
-                    token.firstpos.insert(token_loc);
-                    token.lastpos.insert(token_loc);
-                    tokens.push_back(token);
-
+                    tokens.pop_back();
+                    tokens.push_back({TOKENTYPE::RBRA, ')'});
                     i = j + 1;
                     break;
                 }
                 default:
-                    std::string strit(1, str[i]);
-                    //initial the followpos
-
-                    ++token_loc;
-                    Token token{TOKENTYPE::ID, strit, token_loc};
-                    id2token.insert({token_loc, token});
-
-                    token.firstpos.insert(token_loc);
-                    token.lastpos.insert(token_loc);
-                    tokens.push_back(token);
+                    AddNewID(tokens, str[i]);
                     i++;
                     break;
             }
@@ -506,76 +574,132 @@ namespace CBCompiler {
 
     }
 
-}
 
-void CBCompiler::Regex2Dfa::Follows2Dfa(TranState root) {
+    void Regex2Dfa::Follows2Dfa(TranState root) {
 
-    std::function<bool(std::set<TranState>)> checkstates = [](std::set<TranState> state_set) -> bool {
-        bool flag = true;
-        for (auto &transtate: state_set) {
-            if (!transtate.flag) {
-                flag = false;
-                break;
+        std::function<bool(std::set<TranState>)> checkstates = [](std::set<TranState> state_set) -> bool {
+            bool flag = true;
+            for (auto &transtate: state_set) {
+                if (!transtate.flag) {
+                    flag = false;
+                    break;
+                }
             }
-        }
-        return flag;
-    };
+            return flag;
+        };
 
 
-    std::set<TranState> tran_sta_set;
-    tran_sta_set.insert(root);
+        std::set<TranState> tran_sta_set;
+        tran_sta_set.insert(root);
 
+        while (!tran_sta_set.empty()) {
 
-    while (!tran_sta_set.empty()) {
+            auto iterator = tran_sta_set.begin();
+            // get the unmarked state
 
-        auto iterator = tran_sta_set.begin();
-        // get the unmarked state
+            while (iterator != tran_sta_set.end() && iterator->flag)++iterator;
+            if (iterator == tran_sta_set.end())break;
+            auto S = *iterator;
 
-        while (iterator != tran_sta_set.end() && iterator->flag)++iterator;
-        if (iterator == tran_sta_set.end())break;
-        auto S = *iterator;
+            S.flag = true;
+            tran_sta_set.erase(iterator);
+            tran_sta_set.insert(S);
 
-        S.flag = true;
-        tran_sta_set.erase(iterator);
-        tran_sta_set.insert(S);
+            std::map<Token, std::set<int>> U_map{};
+            // get all union of input token
+            for (auto &loc: S.states) {
+                auto token = id2token[loc];
+                if (token.type == TOKENTYPE::OVER) {
+                    //if the state can tranfer to end state,so we can get mark this state as accept state
+                    dbg(S.states, "is the accpet state");
 
-        std::map<Token, std::set<int>> U_map{};
-        // get all union of input token
-        for (auto &loc: S.states) {
+                    AddAcceptState(S.id);
+                    continue;
+                }
+                if (U_map.count(token) == 0) {
+                    U_map.insert({token, {loc}});
+                } else {
+                    U_map[token].insert(loc);
+                }
 
-            auto token = id2token[loc];
-            if (token.type == TOKENTYPE::OVER) {
-                //if the state can tranfer to end state,so we can get mark this state as accept state
-                dbg(S.states, "is the accpet state");
-                graph->AddAcceptState(S.id);
-                continue;
             }
-            if (U_map.count(token) == 0) {
-                U_map.insert({token, {loc}});
-            } else {
-                U_map[token].insert(loc);
+            for (auto [token, token_locs]: U_map) {
+                std::set<int> unions;
+                for (auto p: token_locs) {
+                    unions.insert(follows[p].begin(), follows[p].end());
+                }
+                std::vector<int> states;
+                states.assign(unions.begin(), unions.end());
+                TranState new_trans{0, false, states};
+                if (tran_sta_set.count(new_trans) == 0) {
+                    new_trans.id = GetNewNodeId();
+                    tran_sta_set.insert(new_trans);
+                } else {
+                    new_trans.id = tran_sta_set.find(new_trans)->id;
+                }
+                dbg(S.states, "->", new_trans.states, token.ch, "\n\n\n");
+                GenerateRelation(S.id, new_trans.id, token);
             }
-
-        }
-        for (auto [token, token_locs]: U_map) {
-//            dbg(token.str);
-            std::set<int> unions;
-
-            for (auto p: token_locs) {//get the union of the follows
-                unions.insert(follows[p].begin(), follows[p].end());
-            }
-
-            std::vector<int> states;
-            states.assign(unions.begin(), unions.end());
-            TranState new_trans{0, false, states};
-            if (tran_sta_set.count(new_trans) == 0) {
-                new_trans.id = graph->GetNewNodeId();
-                tran_sta_set.insert(new_trans);
-            } else {
-                new_trans.id = tran_sta_set.find(new_trans)->id;
-            }
-            dbg(S.states, "->", new_trans.states, token.str, "\n\n\n");
-            graph->GenerateRelation(S.id, new_trans.id, token);
         }
     }
 }
+
+template<typename ... Args>
+std::string string_format(const std::string &format, Args ... args) {
+    size_t size = 1 + snprintf(nullptr, 0, format.c_str(), args ...);  // Extra space for \0
+    // unique_ptr<char[]> buf(new char[size]);
+    char bytes[size];
+    snprintf(bytes, size, format.c_str(), args ...);
+    return bytes;
+}
+
+void CBCompiler::Regex2Dfa::DrawDot(const std::string &outf) {
+
+    assert(node_id >= 1);
+    std::ofstream out(outf);
+    out << "digraph G {" << std::endl;
+    if (acc_states.count(1)) {
+        out << "node_1 [label=StartOrAccept shape=doublecircle color=green];" << std::endl;
+    } else { out << "node_1 [label=Start shape=doublecircle color=blue];" << std::endl; }
+    for (uint i = 2; i <= node_id; ++i) {
+        if (acc_states.count(i)) {
+            out << string_format("node_%d [label=Accept shape=%s color=red fillcolor = pink style = filled];", i, "doublecircle") << std::endl;
+        } else {
+            out << string_format("node_%d [label=%d shape=%s];", i, i, "circle") << std::endl;
+        }
+    }
+    for (auto &tu: charts) {
+        out << string_format("node_%d ->node_%d [label=%c];", std::get<0>(tu), std::get<1>(tu), std::get<2>(tu))
+            << std::endl;
+    }
+
+    out << "}" << std::endl;
+    out.close();
+}
+
+void CBCompiler::Regex2Dfa::GenerateRelation(uint from, uint to, const Token &token) {
+    std::tuple<::uint, ::uint, char> tu{from, to, token.ch};
+    charts.emplace_back(tu);
+    regexchart[from].insert({token.ch, to});
+}
+
+/**
+ * 验证str是否符合正则表达式标准
+ * @param str
+ * @return
+ */
+bool CBCompiler::Regex2Dfa::matched(std::string str) {
+    uint state = 1;
+    uint loc = 0;
+    while (loc < str.size()) {
+        char ch = str.at(loc);
+        if (regexchart[state].count(ch) == 0) {
+            return false;
+        }
+        state = regexchart[state][ch];
+        ++loc;
+    }
+    if (acc_states.count(state) > 0) { return true; }
+    else { return false; }
+}
+

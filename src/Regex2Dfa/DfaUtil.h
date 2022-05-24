@@ -2,6 +2,7 @@
 // Created by supercb on 22-4-24.
 //
 #pragma once
+
 #include <utility>
 #include <vector>
 #include <set>
@@ -41,35 +42,28 @@ namespace CBCompiler {
 
     struct Token {
         TOKENTYPE type;
-        std::string str;
+        char ch;
         unsigned int loc;
         bool nullable;
         std::set<unsigned int> firstpos;
         std::set<unsigned int> lastpos;
-
         bool operator<(const Token &r) const {
-            return str < r.str;
-        }
-        std::vector<char> parseToken()const {
-            //easy type
-            std::vector<char> res;
-            for (auto &ch: str) {
-                res.push_back(ch);
-            }
-            return res;
+            return ch < r.ch;
         }
     };
 
 }
-namespace CBCompiler{
+namespace CBCompiler {
 
     class TranState {
     public:
         uint id;//for generating the trans_chart
         bool flag;
         std::vector<int> states;
-        TranState():id(0),flag(false),states({}){};
-        TranState(uint id_,bool flag_,std::vector<int>states_):id(id_),flag(flag_),states(std::move(states_)) {};
+
+        TranState() : id(0), flag(false), states({}) {};
+
+        TranState(uint id_, bool flag_, std::vector<int> states_) : id(id_), flag(flag_), states(std::move(states_)) {};
 
         bool operator<(const TranState &r) const {
             std::function<int(std::vector<int>)> vec2va = [](std::vector<int> vec) -> int {

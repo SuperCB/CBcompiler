@@ -1,0 +1,20 @@
+{
+  "cblex": [
+    {
+      "val": "void",
+      "name": "Int"
+    }, {
+      "val": "int",
+      "name": "Int"
+    }, {
+      "val": "void",
+      "name": "Void"
+    }, {
+      "val": "void",
+      "name": "Void"
+    }, {
+      "val": "\\+",
+      "name": "Add"
+    }
+  ]
+}

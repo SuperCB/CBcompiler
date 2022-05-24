@@ -344,6 +344,55 @@ uint CBCompiler::LALR::StateTransfer(uint id, const std::string &token) {
     return 0;
 }
 
+/**
+ * 生成一个状态转化表文件
+ */
+void CBCompiler::LALR::GenerateParseChart(std::string outf) {
+    assert(groups.size() >= 1);
+
+
+//    for()
+
+
+    std::ofstream out(outf);
+//    for (auto &lr_group: groups) {
+//        out << string_format("group_%d", lr_group->id);
+//        out << "[label=<<TABLE>" << std::endl;
+//
+//        out << R"(<TR><TD COLSPAN="2" BGCOLOR="darkslategray2"><FONT POINT-SIZE="30" COLOR="red">)";
+//        out << string_format("Group  %d", lr_group->id);
+//        out << "</FONT></TD></TR>)" << std::endl;
+//
+//        for (auto &core_item: lr_group->core_items) {
+//            out << R"(<TR><TD BGCOLOR="green">)" << std::endl;
+//            out << core_item.to_string();
+//            out << R"(</TD><TD BGCOLOR="yellow">)" << std::endl;
+//            for (auto &look: core_item.look_forward) {
+//                out << look << " ";
+//            }
+//            out << "</TD></TR>";
+//        }
+//        out << "</TABLE>>]\n" << std::endl;
+//    }
+
+
+
+
+
+
+    for (auto &edge: trans_chart) {
+        out << string_format("group_%d ->group_%d [label=%s];", std::get<0>(edge), std::get<1>(edge),
+                             std::get<2>(edge).str.c_str())
+            << std::endl;
+    }
+    out << "}" << std::endl;
+    out.close();
+}
+
+/**
+ * 画出LALR语法分析表的项集转换图
+ * @param outf
+ */
 void CBCompiler::LALR::DrawLALR(std::string outf) {
 
     assert(groups.size() >= 1);

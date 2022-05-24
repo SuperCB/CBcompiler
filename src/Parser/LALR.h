@@ -37,11 +37,10 @@ namespace CBCompiler {
 
         void DrawLALR(std::string outf);
 
+        void GenerateParseChart(std::string outf);
+
     private:
-
-
         std::vector<LRItem> GetLR0Closure(const std::vector<LRItem> &coreitems);
-
 
         void GenerateNewLr0Group(LR0group *group, std::queue<LR0group *> &que);
 
@@ -68,13 +67,11 @@ namespace CBCompiler {
 
         std::vector<std::tuple<uint, uint, LRToken>> trans_chart;
 
-
         std::string rootstr;
         std::vector<LR0group *> groups;
         unsigned int lr0_group_id{0};
-
         bool closure;
-
+        std::unordered_map<std::string, ::uint> priority;
 
     };
 }
