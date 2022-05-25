@@ -5,27 +5,44 @@
 #include "LALR.h"
 
 
-CBCompiler::LALR::LALR(std::string_view addr) {
-    json bnfs;
+CBCompiler::LALR::LALR(json src) : terminator_cnt(0), nonterminator_cnt(0) {
 
-    std::ifstream jfile(addr.data());
-    jfile >> bnfs;
-    auto rootExpr = bnfs.find("root");
-    assert(rootExpr != bnfs.end());
+
+    auto prijson = src["priority"];
+
+//解决语法之间的优先级问题
+    for (auto iter = prijson.begin(); iter != prijson.end(); ++iter) {
+        uint lev = iter.value()["level"];
+
+        for (auto token_iter = iter.value()["tokens"].begin();
+             token_iter != iter.value()["tokens"].end(); ++token_iter) {
+            priority[token_iter.value()] = lev;
+        }
+    }
+
+    priority["$"] = -1;
+
+    auto exprs = src["exprs"];
+    auto rootExpr = exprs.find("root");
+    assert(rootExpr != exprs.end());
     rootstr = rootExpr.value();
 
 
+
     //first get all unendtoken
-    for (auto iter = bnfs.begin(); iter != bnfs.end(); ++iter) {
+    for (auto iter = exprs.begin(); iter != exprs.end(); ++iter) {
         if (iter == rootExpr)continue;
         assert(typeid(iter.key()) == typeid(std::string));
         std::string lv = iter.key();
+
         expressions.insert({lv, {}});
+        nonterminator2id[lv] = nonterminator_cnt++;
     }
+
     // second get all endtoken
     ::uint expressionid = 0;
 
-    for (auto iter = bnfs.begin(); iter != bnfs.end(); ++iter) {
+    for (auto iter = exprs.begin(); iter != exprs.end(); ++iter) {
         if (iter == rootExpr)continue;
         auto rv = iter.value();
         auto valist = rv["rval"];
@@ -36,6 +53,7 @@ CBCompiler::LALR::LALR(std::string_view addr) {
                 LRType type_;
                 if (expressions.count(little_expr) == 0) {
                     type_ = LRType::END;
+                    ++terminator_cnt;
                 } else {
                     type_ = LRType::UNEND;
                 }
@@ -157,9 +175,9 @@ void CBCompiler::LALR::GenerateNewLr0Group(CBCompiler::LR0group *group, std::que
 
 void CBCompiler::LALR::AddEdge(uint from, uint to, const std::string &token) {
 
-    if (expressions.count(token)) trans_chart.push_back({from, to, {LRType::UNEND, token}});
+    if (expressions.count(token)) trans_graph.push_back({from, to, {LRType::UNEND, token}});
     else {
-        trans_chart.push_back({from, to, {LRType::END, token}});
+        trans_graph.push_back({from, to, {LRType::END, token}});
     }
 }
 
@@ -206,13 +224,27 @@ void CBCompiler::LALR::DrawLR(std::string outf, bool closure) {
         out << "</TABLE>>]\n" << std::endl;
     }
 
-    for (auto &edge: trans_chart) {
+    for (auto &edge: trans_graph) {
         out << string_format("group_%d ->group_%d [label=%s];", std::get<0>(edge), std::get<1>(edge),
                              std::get<2>(edge).str.c_str())
             << std::endl;
     }
     out << "}" << std::endl;
     out.close();
+}
+
+void CBCompiler::LALR::RemoveDuplicateTrans(uint group_id, std::string str) {
+
+    int loc = -1;
+    for (auto i = 0; i < trans_graph.size(); i++) {
+        if (std::get<0>(trans_graph[i]) == group_id && std::get<2>(trans_graph[i]).str == str) {
+            loc = i;
+            break;
+        }
+    }
+
+    if (loc > 0)
+        trans_graph.erase(trans_graph.begin() + loc);
 }
 
 /**
@@ -336,7 +368,7 @@ std::vector<CBCompiler::LRItem> CBCompiler::LALR::GetLR1Closure(const LRItem &co
 }
 
 uint CBCompiler::LALR::StateTransfer(uint id, const std::string &token) {
-    for (auto &row: trans_chart) {
+    for (auto &row: trans_graph) {
         if (std::get<0>(row) == id && std::get<2>(row).str == token)
             return std::get<1>(row);
     }
@@ -347,47 +379,134 @@ uint CBCompiler::LALR::StateTransfer(uint id, const std::string &token) {
 /**
  * 生成一个状态转化表文件
  */
-void CBCompiler::LALR::GenerateParseChart(std::string outf) {
+void CBCompiler::LALR::GenerateParseChart(std::ofstream &out, std::map<std::string, uint> terminator2id) {
     assert(groups.size() >= 1);
 
-
-//    for()
-
-
-    std::ofstream out(outf);
-//    for (auto &lr_group: groups) {
-//        out << string_format("group_%d", lr_group->id);
-//        out << "[label=<<TABLE>" << std::endl;
 //
-//        out << R"(<TR><TD COLSPAN="2" BGCOLOR="darkslategray2"><FONT POINT-SIZE="30" COLOR="red">)";
-//        out << string_format("Group  %d", lr_group->id);
-//        out << "</FONT></TD></TR>)" << std::endl;
-//
-//        for (auto &core_item: lr_group->core_items) {
-//            out << R"(<TR><TD BGCOLOR="green">)" << std::endl;
-//            out << core_item.to_string();
-//            out << R"(</TD><TD BGCOLOR="yellow">)" << std::endl;
-//            for (auto &look: core_item.look_forward) {
-//                out << look << " ";
-//            }
-//            out << "</TD></TR>";
-//        }
-//        out << "</TABLE>>]\n" << std::endl;
-//    }
+    DrawLALR("graph.dot");
 
 
+    assert(terminator2id.size() == terminator_cnt);
 
-
-
-
-    for (auto &edge: trans_chart) {
-        out << string_format("group_%d ->group_%d [label=%s];", std::get<0>(edge), std::get<1>(edge),
-                             std::get<2>(edge).str.c_str())
-            << std::endl;
+    uint row = groups.size();
+    uint col = terminator2id.size();
+    std::vector<std::vector<CBCompiler::ActionItem>> actions(row, std::vector<CBCompiler::ActionItem>(col,
+                                                                                                      {CBCompiler::ActionItemType::Err,
+                                                                                                       0}));
+    std::vector<std::vector<uint>> gotos(row, std::vector<uint>(col, 0));
+// 所有goto表中的内容以及action表中关于shift的内容都在trans_graph
+    for (auto &edge: trans_graph) {
+        uint from = std::get<0>(edge);
+        uint to = std::get<1>(edge);
+        std::string tokenstr = std::get<2>(edge).str;
+        if (terminator2id.count(tokenstr)) {
+            //如果是终结符就是action表中的移入操作
+            uint row_loc = from;
+            uint col_loc = terminator2id[tokenstr];
+            uint val = to;
+            actions[row_loc][col_loc].type = CBCompiler::ActionItemType::Shift;
+            actions[row_loc][col_loc].val = val;
+        } else {
+            //如果是非终结符就是goto表中的操作
+            uint row_loc = from;
+            uint col_loc = nonterminator2id[tokenstr];
+            uint val = to;
+            gotos[row_loc][col_loc] = val;
+        }
     }
-    out << "}" << std::endl;
-    out.close();
+
+    for (auto &lr_group: groups) {
+        for (auto &core_item: lr_group->core_items) {
+            if (core_item.IsOver()) {
+                for (auto &look_forward: core_item.look_forward) {
+                    uint row_loc = lr_group->id;
+                    uint col_loc = terminator2id[look_forward];
+                    uint val = core_item.expression_id;
+                    if (val == ACCEPT_EXPR_ID) {
+                        actions[row_loc][col_loc].type = CBCompiler::ActionItemType::Accept;
+                        actions[row_loc][col_loc].val = ACCEPT_EXPR_ID;
+                    } else {
+                        if (ComPriority(core_item, look_forward)) {
+                            actions[row_loc][col_loc].type = CBCompiler::ActionItemType::Reduce;
+                            actions[row_loc][col_loc].val = val;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    out << std::endl;
+    out << std::endl;
+
+    //生成action表
+    out << string_format("const static Act ACTION[%u][%u]={", row, col);
+    for (uint i = 0; i < actions.size(); ++i) {
+        out << "{";
+        for (uint j = 0; j < actions[i].size(); ++j) {
+            out << "{";
+//            Act::Err, 0
+            std::string str;
+            switch (actions[i][j].type) {
+                case ActionItemType::Accept:
+                    str = "Act::Accept,0";
+                    break;
+                case ActionItemType::Shift:
+                    str = string_format("Act::Shift,%d", actions[i][j].val);
+                    break;
+                case ActionItemType::Reduce:
+                    str = string_format("Act::Reduce,%d", actions[i][j].val);
+                    break;
+                case ActionItemType::Err:
+                    str = "Act::Err,0";
+                    break;
+                default:
+                    assert(true);
+                    break;
+            }
+            out << str;
+            out << "}";
+            if (j != actions[i].size() - 1)
+                out << ",";
+        }
+        out << "},";
+        out << std::endl;
+    }
+    out << "};";
+    out << std::endl;
+
+    //生成GOTO表
+    out << string_format("const static uint Goto [%u][%u]={", row, col);
+    for (uint i = 0; i < gotos.size(); ++i) {
+        out << "{";
+        for (uint j = 0; j < gotos[i].size(); ++j) {
+            out << string_format("%u", gotos[i][j]);
+            if (j != gotos[i].size() - 1) {
+                out << ",";
+            }
+        }
+        out << "},";
+        out << std::endl;
+    }
+    out << "};";
+    out << std::endl;
+    out << std::endl;
+
+
+    out << "switch(act.val){";
+
+    for (auto [k, v]: expression_action) {
+        out << string_format("case %d:{", k);
+        out << v;
+        out << "break;\n}";
+    }
+    out << R"(default:
+            break;})";
+
+
 }
+
 
 /**
  * 画出LALR语法分析表的项集转换图
@@ -409,25 +528,49 @@ void CBCompiler::LALR::DrawLALR(std::string outf) {
         out << "</FONT></TD></TR>)" << std::endl;
 
         for (auto &core_item: lr_group->core_items) {
-            out << R"(<TR><TD BGCOLOR="green">)" << std::endl;
+            out << R"(<TR><TD BGCOLOR="pink">)" << std::endl;
             out << core_item.to_string();
             out << R"(</TD><TD BGCOLOR="yellow">)" << std::endl;
+
+
             for (auto &look: core_item.look_forward) {
-                out << look << " ";
+                if (ComPriority(core_item, look)) {
+                    out << look << " ";
+                    if (core_item.IsOver()) {
+                        RemoveDuplicateTrans(lr_group->id, look);
+                    }
+                }
             }
             out << "</TD></TR>";
         }
         out << "</TABLE>>]\n" << std::endl;
     }
 
-    for (auto &edge: trans_chart) {
-        out << string_format("group_%d ->group_%d [label=%s];", std::get<0>(edge), std::get<1>(edge),
+    for (auto &edge: trans_graph) {
+        out << string_format("group_%d ->group_%d [label=%s fontsize=30];", std::get<0>(edge), std::get<1>(edge),
                              std::get<2>(edge).str.c_str())
             << std::endl;
     }
     out << "}" << std::endl;
     out.close();
 }
+
+//去除二义性，去除二义性并不发生在LALR表的构造过程中，而是发生在LALR表构造完成后
+bool CBCompiler::LALR::ComPriority(CBCompiler::LRItem &lrItem, const std::string &look) {
+
+    if (!lrItem.IsOver())return true;
+    std::string l_op;
+    if (!lrItem.GetStrBeforeLoc(l_op)) {
+        return true;
+        //look 可以用于规约
+    }
+    if (priority.count(l_op) == 0 || priority.count(look) == 0)return true;
+    if (priority[l_op] >= priority[look]) {
+        return true;
+    }
+    return false;
+}
+
 
 
 

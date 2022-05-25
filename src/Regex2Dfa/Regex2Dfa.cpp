@@ -2,11 +2,11 @@
 // Created by supercb on 2022-04-02.
 //
 
-#include "Regex2Dfa.h"
+#include "CFlex.h"
 #include <cassert>
 #include <fstream>
 namespace CBCompiler {
-    void Regex2Dfa::OperBNF1(std::stack<uint32> &states, std::stack<Token> &token_stack) {
+    void CFlex::OperBNF1(std::stack<uint32> &states, std::stack<Token> &token_stack) {
         states.pop();
         auto token_T = token_stack.top();
         token_stack.pop();
@@ -33,7 +33,7 @@ namespace CBCompiler {
         token_stack.push(token);
     }
 
-    void Regex2Dfa::OperBNF2(std::stack<uint32> &states, std::stack<Token> &token_stack) {
+    void CFlex::OperBNF2(std::stack<uint32> &states, std::stack<Token> &token_stack) {
 //    dbg("E-> ET");
 
         states.pop();
@@ -75,7 +75,7 @@ namespace CBCompiler {
         token_stack.push(token);
     }
 
-    void Regex2Dfa::OperBNF4(std::stack<uint32> &states, std::stack<Token> &token_stack) {
+    void CFlex::OperBNF4(std::stack<uint32> &states, std::stack<Token> &token_stack) {
         //"T-> F+"
         states.pop();
         token_stack.pop();
@@ -99,7 +99,7 @@ namespace CBCompiler {
         token_stack.push(token_F);
     }
 
-    void Regex2Dfa::OperBNF5(std::stack<uint32> &states, std::stack<Token> &token_stack) {
+    void CFlex::OperBNF5(std::stack<uint32> &states, std::stack<Token> &token_stack) {
         //"T-> F*"
         states.pop();
         token_stack.pop();
@@ -125,7 +125,7 @@ namespace CBCompiler {
         token_stack.push(token_F);
     }
 
-    void Regex2Dfa::OperBNF6(std::stack<uint32> &states, std::stack<Token> &token_stack) {
+    void CFlex::OperBNF6(std::stack<uint32> &states, std::stack<Token> &token_stack) {
         //T->F?
         states.pop();
         token_stack.pop();
@@ -143,7 +143,7 @@ namespace CBCompiler {
         token_stack.push(token_F);
     }
 
-    Regex2Dfa::Regex2Dfa(std::string_view regexstr):node_id(0) {
+    CFlex::CFlex(std::string_view regexstr): node_id(0) {
 
         InitTheChart();
         std::stack<uint32> states;
@@ -289,7 +289,7 @@ namespace CBCompiler {
 
     }
 
-    void Regex2Dfa::AddNewID(std::vector<Token> &tokens, char ch) {
+    void CFlex::AddNewID(std::vector<Token> &tokens, char ch) {
         Token token{TOKENTYPE::ID, ch, token_loc};
         follows.insert({token_loc, {}});
         id2token.insert({token_loc, token});
@@ -299,7 +299,7 @@ namespace CBCompiler {
         ++token_loc;
     }
 
-    std::vector<Token> Regex2Dfa::Preprocessing(std::string_view str) {
+    std::vector<Token> CFlex::Preprocessing(std::string_view str) {
         std::vector<Token> tokens;
         int i = 0;
         while (i < str.size()) {
@@ -432,16 +432,16 @@ namespace CBCompiler {
  * Generate the la0 chart to read the regex
  */
 
-    inline void Regex2Dfa::AddLar0Item(int loc, TOKENTYPE token, ChartItem item) {
+    inline void CFlex::AddLar0Item(int loc, TOKENTYPE token, ChartItem item) {
         ACTIONS[loc][TokenId(token)].act = item.act;
         ACTIONS[loc][TokenId(token)].val = item.val;
     }
 
-    inline void Regex2Dfa::AddGotoItem(int loc, TOKENTYPE token, unsigned int state) {
+    inline void CFlex::AddGotoItem(int loc, TOKENTYPE token, unsigned int state) {
         GOTOS[loc][TokenId(token)] = state;
     }
 
-    void Regex2Dfa::InitTheChart() {
+    void CFlex::InitTheChart() {
         ACTIONS = {20, std::vector<ChartItem>(20)};
 
         {
@@ -575,7 +575,7 @@ namespace CBCompiler {
     }
 
 
-    void Regex2Dfa::Follows2Dfa(TranState root) {
+    void CFlex::Follows2Dfa(TranState root) {
 
         std::function<bool(std::set<TranState>)> checkstates = [](std::set<TranState> state_set) -> bool {
             bool flag = true;
@@ -653,7 +653,7 @@ std::string string_format(const std::string &format, Args ... args) {
     return bytes;
 }
 
-void CBCompiler::Regex2Dfa::DrawDot(const std::string &outf) {
+void CBCompiler::CFlex::DrawDot(const std::string &outf) {
 
     assert(node_id >= 1);
     std::ofstream out(outf);
@@ -677,7 +677,7 @@ void CBCompiler::Regex2Dfa::DrawDot(const std::string &outf) {
     out.close();
 }
 
-void CBCompiler::Regex2Dfa::GenerateRelation(uint from, uint to, const Token &token) {
+void CBCompiler::CFlex::GenerateRelation(uint from, uint to, const Token &token) {
     std::tuple<::uint, ::uint, char> tu{from, to, token.ch};
     charts.emplace_back(tu);
     regexchart[from].insert({token.ch, to});
@@ -688,7 +688,7 @@ void CBCompiler::Regex2Dfa::GenerateRelation(uint from, uint to, const Token &to
  * @param str
  * @return
  */
-bool CBCompiler::Regex2Dfa::matched(std::string str) {
+bool CBCompiler::CFlex::matched(std::string str) {
     uint state = 1;
     uint loc = 0;
     while (loc < str.size()) {

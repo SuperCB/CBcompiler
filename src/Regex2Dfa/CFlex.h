@@ -20,16 +20,16 @@
 #include "DfaUtil.h"
 
 namespace CBCompiler {
-    class Regex2Dfa {
+    class CFlex {
         using uint8 = uint8_t;
         using uint32 = unsigned int;
 
     public:
-        Regex2Dfa(std::string_view regexstr);
+        CFlex(std::string_view regexstr);
 
-        Regex2Dfa(const Regex2Dfa &regex2Dfa) = delete;
+        CFlex(const CFlex &regex2Dfa) = delete;
 
-        Regex2Dfa operator=(const Regex2Dfa &regex2Dfa) = delete;
+        CFlex operator=(const CFlex &regex2Dfa) = delete;
 
 
         void InitTheChart();

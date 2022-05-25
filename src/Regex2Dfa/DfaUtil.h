@@ -57,7 +57,7 @@ namespace CBCompiler {
 
     class TranState {
     public:
-        uint id;//for generating the trans_chart
+        uint id;//for generating the trans_graph
         bool flag;
         std::vector<int> states;
 

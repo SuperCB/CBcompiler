@@ -74,12 +74,23 @@ namespace CBCompiler {
             return str;
         }
 
+        // 判断.符号是否dfsdfs dsf
+        bool IsOver() {
+            return ploc == rexprs.size();
+        }
+
         [[nodiscard]] const std::string &GetLva() const {
             return lv;
         }
 
         [[nodiscard]] const std::vector<LRToken> &GetRexprs() const {
             return rexprs;
+        }
+        bool GetStrBeforeLoc(std::string &str) {
+            if (ploc < 2)return false;
+            if (rexprs[ploc - 2].type == LRType::UNEND)return false;
+            str = rexprs[ploc - 2].str;
+            return true;
         }
 
         int GetPointLoc() const {

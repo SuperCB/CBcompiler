@@ -1,0 +1,49 @@
+{
+  "cblex": [
+    {
+      "val": "void",
+      "name": "Int"
+    }, {
+      "val": "int",
+      "name": "Int"
+    }, {
+      "val": "void",
+      "name": "Void"
+    }, {
+      "val": "void",
+      "name": "Void"
+    }, {
+      "val": "\\+",
+      "name": "Add"
+    }
+  ],
+  "cbsion": {
+    "root": "E",
+    "priority": [
+      {
+        "assoc": "left",
+        "terms": ["Or"]
+      }
+    ],
+    "E": {
+      "rval": [
+        {
+          "val": ["E", "add", "E"],
+          "act": " { rhs = ['ParamList1'], act = '__ = std::move(_1);' },"
+        },
+        {
+          "val": ["E", "mul", "E"],
+          "act": " { rhs = ['ParamList1'], act = '__ = std::move(_1);' },"
+        },
+        {
+          "val": ["L", "E", "R"],
+          "act": " { rhs = ['ParamList1'], act = '__ = std::move(_1);' },"
+        },
+        {
+          "val": ["id"],
+          "act": " { rhs = ['ParamList1'], act = '__ = std::move(_1);' },"
+        }
+      ]
+    }
+  }
+}
