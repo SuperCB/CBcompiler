@@ -20,14 +20,6 @@ void Graph::AddEdge(uint from, uint to) {
     id2map[to].AddPre(from);
 }
 
-template<typename ... Args>
-std::string string_format(const std::string &format, Args ... args) {
-    size_t size = 1 + snprintf(nullptr, 0, format.c_str(), args ...);  // Extra space for \0
-    // unique_ptr<char[]> buf(new char[size]);
-    char bytes[size];
-    snprintf(bytes, size, format.c_str(), args ...);
-    return bytes;
-}
 
 //最简单的一种求支配树的方法
 void Graph::GetDomTree() {
@@ -122,4 +114,92 @@ void Graph::DrawDomTree() {
     tree.close();
 
 }
+
+void Graph::DFS(std::vector<std::string> &edges) {
+    assert(!id2map.empty());
+    uint root_id = 0;
+    for (auto [k, v]: id2map) {
+        if (v.pres.empty()) {
+            root_id = k;
+            break;
+        }
+    }
+    DFS(root_id, edges);
+}
+
+void Graph::DFS(uint root, std::vector<std::string> &edges) {
+
+    auto &root_node = id2map[root];
+
+    root_node.before = time_stamp++;
+    root_node.state = Node::State::DISCOVERD;
+//    std::cout << id2map[root].before << std::endl;
+
+    for (auto succ: root_node.succs) {
+
+        switch (id2map[succ].state) {
+            case Node::State::DISCOVERD:
+                edges.emplace_back(Backward_Edge(root, succ));
+                break;
+            case Node::State::UNDISCOVERD:
+                edges.emplace_back(Tree_Edge(root, succ));
+                DFS(succ, edges);
+                break;
+            case Node::State::VISITED:
+                if (id2map[succ].before > id2map[root].before)
+                    edges.emplace_back(Forward_Edge(root, succ));
+                else {
+                    edges.emplace_back(Cross_Edge(root, succ));
+                }
+                break;
+            default:
+                break;
+        }
+
+    }
+    root_node.after = time_stamp++;
+    root_node.state = Node::State::VISITED;
+}
+
+void Graph::Draw() {
+    std::vector<std::string> edges;
+    DFS(edges);
+
+    std::ofstream tree("tree.dot");
+    tree << "digraph LALR {" << std::endl;
+    tree << "rankdir=TD;" << std::endl;
+    {
+        tree << "subgraph cluster_1 {" << std::endl;
+        tree << R"(label="original graph")" << std::endl;
+        for (auto &[k, v]: id2map) {
+            tree << string_format("nodeor_%u [label=%u shape=doublecircle fillcolor = pink style = filled];", k, k)
+                 << std::endl;
+        }
+        for (auto [k, node]: id2map) {
+            for (auto succ_id: node.succs) {
+                tree << string_format("nodeor_%d ->nodeor_%d ;", k, succ_id) << std::endl;
+            }
+        }
+        tree << "};" << std::endl;
+    }
+    {
+        tree << "subgraph cluster_2 {" << std::endl;
+        tree << R"(label="After DFS")" << std::endl;
+        tree << "color = blue;" << std::endl;
+
+        for (auto &[k, v]: id2map) {
+            tree << string_format(
+                    R"(nodedfs_%u [label=<<FONT POINT-SIZE="25">%u</FONT>|<FONT POINT-SIZE="35">id:%u</FONT>|<FONT POINT-SIZE="25">%u</FONT>> shape=Mrecord fillcolor = pink style = filled];)",
+                    k, v.before, k, v.after) << std::endl;
+        }
+
+        for (auto &edge: edges) {
+            tree << edge << std::endl;
+        }
+        tree << "};" << std::endl;
+    }
+    tree << "}" << std::endl;
+    tree.close();
+}
+
 

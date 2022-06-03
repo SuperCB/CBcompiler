@@ -11,18 +11,31 @@ class Node {
 private:
     using uint = unsigned int;
 
-public:
-    Node() : id(0) {};
 
-    Node(uint id_) : id(id_) {};
+public:
+
+    enum class State {
+        DISCOVERD,
+        UNDISCOVERD,
+        VISITED
+    };
+    Node() : state(State::UNDISCOVERD), id(0), before(0), after(0), doms({}), pres({}), succs({}) {};
+
+    Node(uint id_) : state(State::UNDISCOVERD), id(id_), before(0), after(0), doms({}), pres({}), succs({}) {};
+
+    State state;
+
     unsigned int id;
+    uint before, after;
 
     std::vector<uint> doms;
     std::vector<uint> pres;
     std::vector<uint> succs;
 
     void AddSucc(uint succ_);
+
     void AddPre(uint pre);
+
     void AddDom(uint dom);
 
 };
