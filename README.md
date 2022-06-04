@@ -117,8 +117,23 @@ CBison希望能够做到通过作图的方式理解复杂的编译原理。
 | :----------------------: | :------------------------: |
 |      先规约，再移入      |       先移入，再规约       |
 | ![](resources/mulow.png) | ![](resources/mulhigh.png) |
-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
-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
+
+
+
+**这个项目只能支持**
++ 处理优先级需要处理
++ 处理左结合与右结合问题需要考虑goto表与规约的去留
+  + 如果是左结合，则需要保留规约项去除goto项
+  + 如果是右结合，则需要保留goto项去除规约项
+
+
+**这里用编译原理书中第178页的内容来举一个例子**
+
++ 在没有处理优先级与结合性之前
+  ![](resources/bedeal.png)
++ 解决优先级与二义性问题之后
+  ![](resources/aftdeal.png)
+
  #  IR中间表示
 
 
