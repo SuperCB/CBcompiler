@@ -117,7 +117,8 @@ CBison希望能够做到通过作图的方式理解复杂的编译原理。
 | :----------------------: | :------------------------: |
 |      先规约，再移入      |       先移入，再规约       |
 | ![](resources/mulow.png) | ![](resources/mulhigh.png) |
-
+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
+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
  #  IR中间表示
 
 
@@ -140,4 +141,6 @@ CBison希望能够做到通过作图的方式理解复杂的编译原理。
 的性质与区别
 
 
-![](resources/tree.png)
+![](resources/dfstree.png)
+![](resources/domtree2.png)
+![](resources/domtree1.png)

@@ -16,3 +16,5 @@ void Node::AddPre(uint pre) {
 void Node::AddDom(uint dom) {
     doms.push_back(dom);
 }
+
+

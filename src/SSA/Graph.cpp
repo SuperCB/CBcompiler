@@ -117,7 +117,8 @@ void Graph::DrawDomTree() {
 
 void Graph::DFS(std::vector<std::string> &edges) {
     assert(!id2map.empty());
-    uint root_id = 0;
+    uint root_id = 1;
+
     for (auto [k, v]: id2map) {
         if (v.pres.empty()) {
             root_id = k;
@@ -131,25 +132,30 @@ void Graph::DFS(uint root, std::vector<std::string> &edges) {
 
     auto &root_node = id2map[root];
 
+    sdom[root] = root;
+    forest_fa[root] = root;
+    label[root] = root;
     root_node.before = time_stamp++;
     root_node.state = Node::State::DISCOVERD;
-//    std::cout << id2map[root].before << std::endl;
+
+    //  std::cout << id2map[root].before << std::endl;
 
     for (auto succ: root_node.succs) {
 
         switch (id2map[succ].state) {
             case Node::State::DISCOVERD:
-                edges.emplace_back(Backward_Edge(root, succ));
+                edges.emplace_back(Backward_Edge(root, succ, "nodedfs"));
                 break;
             case Node::State::UNDISCOVERD:
-                edges.emplace_back(Tree_Edge(root, succ));
+                id2map[succ].treefas = root;
+                edges.emplace_back(Tree_Edge(root, succ, "nodedfs"));
                 DFS(succ, edges);
                 break;
             case Node::State::VISITED:
                 if (id2map[succ].before > id2map[root].before)
-                    edges.emplace_back(Forward_Edge(root, succ));
+                    edges.emplace_back(Forward_Edge(root, succ, "nodedfs"));
                 else {
-                    edges.emplace_back(Cross_Edge(root, succ));
+                    edges.emplace_back(Cross_Edge(root, succ, "nodedfs"));
                 }
                 break;
             default:
@@ -161,16 +167,19 @@ void Graph::DFS(uint root, std::vector<std::string> &edges) {
     root_node.state = Node::State::VISITED;
 }
 
-void Graph::Draw() {
+void Graph::DrawDfsTree() {
     std::vector<std::string> edges;
     DFS(edges);
-
-    std::ofstream tree("tree.dot");
-    tree << "digraph LALR {" << std::endl;
+    std::ofstream tree("dfstree.dot");
+    tree << "digraph tree {" << std::endl;
     tree << "rankdir=TD;" << std::endl;
     {
         tree << "subgraph cluster_1 {" << std::endl;
-        tree << R"(label="original graph")" << std::endl;
+        tree << "fontsize=40;" << std::endl;
+        tree << "style=filled;" << std::endl;
+        tree << "color=lightcyan;" << std::endl;
+
+        tree << R"(label="Original Graph")" << std::endl;
         for (auto &[k, v]: id2map) {
             tree << string_format("nodeor_%u [label=%u shape=doublecircle fillcolor = pink style = filled];", k, k)
                  << std::endl;
@@ -184,7 +193,8 @@ void Graph::Draw() {
     }
     {
         tree << "subgraph cluster_2 {" << std::endl;
-        tree << R"(label="After DFS")" << std::endl;
+        tree << "fontsize=40;" << std::endl;
+        tree << R"(label="DFS Graph")" << std::endl;
         tree << "color = blue;" << std::endl;
 
         for (auto &[k, v]: id2map) {
@@ -200,6 +210,70 @@ void Graph::Draw() {
     }
     tree << "}" << std::endl;
     tree.close();
+}
+
+void Graph::Lengauer_Tarjan(bool draw, bool orignal) {
+    std::vector<std::string> edges;
+    DFS(edges);
+    std::vector<std::pair<uint, Node>> vec(id2map.begin(), id2map.end());
+    sort(vec.begin(), vec.end(), [&](std::pair<uint, Node> a, std::pair<uint, Node> b) {
+        return a.NODE.before < b.NODE.before;
+    }); //排序
+
+    for (int i = vec.size() - 1; i >= 0; i--) {
+        auto node_pair = vec[i];
+
+        for (auto &pre: node_pair.NODE.pres) {
+            Find(pre);
+            sdom[node_pair.NUM] = std::min(sdom[node_pair.NUM], sdom[label[pre]]);
+        }
+        if (i > 0)bucket[sdom[node_pair.NUM]].push_back(node_pair.NUM);
+
+        for (int j = 0; j < bucket[node_pair.NUM].size(); j++) {
+            uint w = bucket[node_pair.NUM][j];
+            Find(w);
+            uint u = label[w];
+            if (sdom[u] == sdom[w])idom[w] = sdom[u];
+            else {
+                idom[w] = u;
+            }
+        }
+        if (i > 0)Merge(id2map[node_pair.NUM].treefas, node_pair.NUM);
+    }
+
+    for (int i = 1; i < vec.size(); i++) {
+        auto loc = vec[i].NUM;
+        if (idom[loc] != sdom[loc])
+            idom[loc] = idom[idom[loc]];
+    }
+
+    if (draw) {
+        std::ofstream tree("domtree.dot");
+        tree << "digraph tree {" << std::endl;
+        {
+
+            tree << R"(fontsize="40")" << std::endl;
+            tree << R"(label="Dominator Tree")" << std::endl;
+            for (auto &[k, v]: id2map) {
+                tree << string_format("nodeor_%u [label=%u shape=doublecircle fillcolor = pink style = filled];", k, k)
+                     << std::endl;
+            }
+            if (orignal) {
+                for (auto [k, node]: id2map) {
+                    for (auto succ_id: node.succs) {
+                        tree << string_format("nodeor_%d ->nodeor_%d ;", k, succ_id) << std::endl;
+                    }
+                }
+            }
+            for (auto &[k, v]: idom) {
+                tree << Idom_Edge(v, k, "nodeor") << std::endl;
+            }
+
+        }
+
+        tree << "}" << std::endl;
+        tree.close();
+    }
 }
 
 

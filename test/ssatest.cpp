@@ -39,7 +39,7 @@ TEST(SSATest, GenerateGraph1) {
     graph.AddEdge(8, 9);
     graph.AddEdge(8, 10);
     graph.AddEdge(8, 3);
-    graph.Draw();
+    graph.DrawDfsTree();
     //    graph.DrawTree();
 //    graph.GetDomTree();
 //    graph.DrawDomTree();
@@ -60,7 +60,38 @@ TEST(SSATest, GenerateGraph2) {
     graph.AddEdge(4, 6);
     graph.AddEdge(6, 7);
     graph.AddEdge(5, 7);
+    graph.DrawDfsTree();
+}
 
+TEST(SSATest, TarjanTest) {
 
-    graph.Draw();
+    Graph graph;
+    for (unsigned int i = 1; i <= 13; ++i) {
+        graph.Add_Node(Node(i));
+    }
+
+    graph.AddEdge(1, 2);
+    graph.AddEdge(2, 3);
+    graph.AddEdge(2, 6);
+    graph.AddEdge(3, 4);
+    graph.AddEdge(6, 4);
+    graph.AddEdge(7, 4);
+    graph.AddEdge(6, 7);
+    graph.AddEdge(4, 5);
+    graph.AddEdge(5, 4);
+    graph.AddEdge(5, 1);
+    graph.AddEdge(1, 8);
+    graph.AddEdge(8, 9);
+    graph.AddEdge(8, 11);
+    graph.AddEdge(8, 12);
+    graph.AddEdge(9, 10);
+    graph.AddEdge(10, 9);
+    graph.AddEdge(11, 12);
+    graph.AddEdge(12, 13);
+    graph.AddEdge(13, 10);
+    graph.AddEdge(10, 5);
+    graph.AddEdge(1, 11);
+
+    graph.DrawDfsTree();
+    graph.Lengauer_Tarjan(true, true);
 }
