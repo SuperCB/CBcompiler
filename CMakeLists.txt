@@ -17,6 +17,10 @@ add_subdirectory("${CMAKE_BINARY_DIR}/googletest-src" "${CMAKE_BINARY_DIR}/googl
 add_subdirectory(test)
 file(GLOB_RECURSE CBlibrary_source ${PROJECT_SOURCE_DIR}/src/*/*.cpp ${PROJECT_SOURCE_DIR}/src/*/*.h)
 
+include_directories(yaml-cpp-master/include)
+add_subdirectory(yaml-cpp-master)
+
+
 add_library(CBlibrary
         STATIC
         ${CBlibrary_source}
@@ -24,7 +28,7 @@ add_library(CBlibrary
 
 add_executable(CBcompiler main.cpp src/JsonReader/JsonReader.cpp src/JsonReader/JsonReader.h)
 
-target_link_libraries(CBcompiler CBlibrary)
+target_link_libraries(CBcompiler CBlibrary yaml-cpp)
 
 
 
