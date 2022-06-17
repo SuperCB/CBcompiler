@@ -1,10 +1,10 @@
 {
   "cbsion": {
-    "exprs": {
-      "root": "E",
-      "E": {
+    "root": "E",
+    "exprs": [
+      {
+        "lval": "E",
         "rval": [
-
           {
             "val": ["E", "Add", "E"],
             "act": "[\"E\", \"add\", \"E\"]"
@@ -23,7 +23,7 @@
           }
         ]
       }
-    },
+    ],
     "priority": [
       {
         "tokens": ["Or"],

@@ -159,3 +159,8 @@ CBison希望能够做到通过作图的方式理解复杂的编译原理。
 ![](resources/dfstree.png)
 ![](resources/domtree2.png)
 ![](resources/domtree1.png)
+
+
+## 开发有感
++ 使用json作为开发文件一开始还能感觉到简洁，但是内容一多就发现其臃肿不堪，可读性瞬间变差。果断换成yaml开发。
++ 
