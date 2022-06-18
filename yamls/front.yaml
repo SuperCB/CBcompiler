@@ -1,0 +1,568 @@
+cblex:
+  - val: void
+    name: Void
+  - val: int
+    name: Int
+  - val: const
+    name: Const
+  - val: while
+    name: While
+  - val: if
+    name: If
+  - val: else
+    name: Else
+  - val: return
+    name: Return
+  - val: break
+    name: Break
+  - val: continue
+    name: Continue
+  - val: '\\+'
+    name: Add
+  - val: '-'
+    name: Sub
+  - val: '\\*'
+    name: Mul
+  - val: /
+    name: Div
+  - val: '%'
+    name: Mod
+  - val: <
+    name: Lt
+  - val: <=
+    name: Le
+  - val: >
+    name: Gt
+  - val: '>='
+    name: Ge
+  - val: '=='
+    name: Eq
+  - val: '!='
+    name: 'Ne'
+  - val: '&&'
+    name: And
+  - val: '||'
+    name: Or
+  - val: =
+    name: Assign
+  - val: ','
+    name: Comma
+  - val: ';'
+    name: Semi
+  - val: '!'
+    name: Not
+  - val: '\\('
+    name: LPar
+  - val: '\\)'
+    name: RPar
+  - val: '\\['
+    name: LBrk
+  - val: '\\]'
+    name: RBrk
+  - val: '{'
+    name: LBrc
+  - val: '}'
+    name: RBrc
+  - val: '[_A-Za-z]\w*'
+    name: ID
+  - val: '\d+|(0x[0-9a-fA-F]+)'
+    name: IntConst
+
+
+cbsion:
+  root: Program
+  exprs:
+    - lval: Program
+      rval:
+        - val:
+            - Program
+            - Decl
+          act: |
+            fasdf
+        - val:
+            - Program
+            - Func
+          act: |
+            fasd adf 
+
+    - lval: Decl
+      rval:
+        - val:
+            - Const
+            - Int
+            - DeclList
+            - Semi
+          act: |
+            dfas
+        - val:
+            - Int
+            - DeclList
+            - Semi
+          act: |
+            dfas 
+
+
+
+
+    - lval: DeclList
+      rval:
+        - val:
+            - DeclList1
+          act: |
+            fasd 
+
+
+
+    - lval: DeclList1
+      rval:
+        - val:
+            - DeclList1
+            - Comma
+            - Decl1
+          act: |
+            fas
+        - val:
+            - Decl1
+          act: |
+            fasdf 
+
+    - lval: Decl1
+      rval:
+        - val:
+            - ID
+            - ArrayDims
+            - Assign
+            - InitList
+          act: |
+            dfas
+        - val:
+            - ID
+            - ArrayDims
+          act: |
+            fads
+
+    - lval: InitList
+      rval:
+        - val:
+            - LBrc
+            - InitList1
+            - RBrc
+          act: |
+            dfas
+        - val:
+            - LBrc
+            - RBrc
+          act: |
+            dasfa
+        - val:
+            - Expr
+          act: |
+            fadsf
+    - lval: InitList1
+      rval:
+        - val:
+            - InitList1
+            - Comma
+            - InitList
+          act: |
+            fads
+        - val:
+            - InitList
+          act: |
+            fasdf 
+
+
+
+    - lval: Expr
+      rval:
+        - val:
+            - Expr
+            - Add
+            - Expr
+          act: |
+            gfsd sfdgs sdfg
+            dfa sd
+        - val:
+            - Expr
+            - Sub
+            - Expr
+          act: ' ["E", "mul", "E"]'
+
+        - val:
+            - Expr
+            - Mul
+            - Expr
+          act: '["L", "E", "R"]'
+
+        - val:
+            - Expr
+            - Div
+            - Expr
+          act: '[id]'
+
+        - val:
+            - Expr
+            - Mod
+            - Expr
+          act: |
+            fdsa
+
+        - val:
+            - Expr
+            - Lt
+            - Expr
+          act: |
+            dfas
+
+        - val:
+            - Expr
+            - Le
+            - Expr
+          act: |
+            dfas
+
+        - val:
+            - Expr
+            - Gt
+            - Expr
+          act: |
+            dfas
+
+        - val:
+            - Expr
+            - Ge
+            - Expr
+          act: |
+            dfas
+
+        - val:
+            - Expr
+            - Eq
+            - Expr
+          act: |
+            dfas
+
+        - val:
+            - Expr
+            - Ne
+            - Expr
+          act: |
+            dfas      
+
+        - val:
+            - Expr
+            - And
+            - Expr
+          act: |
+            dfas
+
+        - val:
+            - Expr
+            - Or
+            - Expr
+          act: |
+            dfas
+        - val:
+            - Add
+            - Expr
+          act: |
+            dfas
+
+        - val:
+            - Sub
+            - Expr
+          act: |
+            dfas
+
+        - val:
+            - Not
+            - Expr
+          act: |
+            dfas
+
+        - val:
+            - LPar
+            - Expr
+            - RPar
+          act: |
+            dfa
+
+        #这是函数调用
+        - val:
+            - ID
+            - LPar
+            - ExprList
+            - RPar
+          act: |
+            dsaf 
+
+        - val:
+            - ID
+            - ArrayDims
+          act: |
+            dsfa
+        - val:
+            - IntConst
+          act: |
+            adfasdf
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    - lval: BasicBlock
+      rval:
+        - val:
+            - LBrc
+            - StmtList
+            - RBrc
+          act: |
+            adsf
+    
+
+    - lval : ParamList
+      rval :
+        - val :
+            - ParamList1
+          act : |
+            fdsa
+
+    - lval : ParamList1
+      rval :
+        - val :
+            - ParamList1
+            - Comma
+            - Param
+          act : |
+            afsdf
+        - val :
+            - Param
+          act : |
+            asdf
+
+    - lval : Param
+      rval :
+        - val :
+            - Int
+            - ID
+            - FunArrayDims
+          act : |
+            afds
+        - val :
+            - Int
+            - ID
+          act : |
+            adsf
+
+    - lval : Stmt
+      rval :
+        - val :
+            - ID
+            - ArrayDims
+            - Assign
+            - Expr
+            - Semi
+          act : |
+            sdaf
+        - val :
+            - Expr
+            - Semi
+          act : |
+            dasf
+        - val :
+            - Semi
+          act : |
+            fasd
+        - val :
+            - Decl
+          act : |
+            das
+        - val :
+            BasicBlock
+          act : |
+            fdsa
+        - val :
+            - If
+            - LPar
+            - Expr
+            - RPar
+            - Stmt
+            - ELse0
+          act : |
+            dfsa
+        - val :
+            - While
+            - LPar
+            - Expr
+            - RPar
+            - Stmt
+          act : |
+            fdsa
+        - val :
+            - Break
+            - Semi
+          act : |
+            dsfa
+        - val :
+            - Continue
+            - Semi
+          act : |
+            fdas
+        - val :
+            - Return
+            - Expr
+            - Semi
+          act : |
+            afds
+        - val :
+            - Return
+            - Semi
+          act : |
+            dsafs
+    
+    
+    
+
+    - lval : StmtList
+      rval :
+        - val :
+            - StmtList
+            - Stmt
+          act : |
+             adfs
+
+    - lval : Else0
+      rval :
+        - val :
+            - Else
+            - Stmt
+          act : |
+            fads
+        
+
+    - lval : ExprList
+      rval :
+        - val :
+            - ExprList1
+          act : |
+            adsf
+
+    - lval : ExprList1
+      rval :
+        - val :
+            - ExprList1
+            - Comma
+            - Expr
+          act : |
+            dasf
+        - val :
+            - Expr
+          act : |
+             fdas
+
+    - lval: Func
+      rval:
+        - val:
+            - Int
+            - ID
+            - LPar
+            - ParamList
+            - RPar
+            - BasicBlock
+          act: |
+            fdas
+
+        - val:
+            - Void
+            - ID
+            - LPar
+            - ParamList
+            - RPar
+            - BasicBlock
+          act: |
+            fdas
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    - lval: FunArrayDims
+      rval:
+        - val:
+            - FunArrayDims
+            - LBrk
+            - Expr
+            - RBrk
+          act: |
+            fas
+        - val:
+            - LBrk
+            - RBrk
+          act: |
+            fsdaf
+
+    - lval: ArrayDims
+      rval:
+        - val:
+            - ArrayDims
+            - LBrk
+            - Expr
+            - RBrk
+          act: |
+            fsadfasdf
+  
+
+  priority:
+    - tokens:
+        - Or
+      level: 1
+    - tokens:
+        - And
+      level: 2
+    - tokens:
+        - Eq
+        - Ne
+      level: 3
+    - tokens:
+        - Lt
+        - Le
+        - Ge
+        - Gt
+      level: 4
+    - tokens:
+        - Add
+        - Sub
+      level: 5
+    - tokens:
+        - Mul
+        - Div
+        - Mod
+      level: 6

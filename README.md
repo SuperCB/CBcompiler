@@ -7,7 +7,7 @@
 
 
 ## 《编译原理》里的语法分析这一章究竟在讲什么？
-![](compiler1.png)
+![](resources/compiler1.png)
 
 因为LALR语法分析表可以在原来LR0项集的基础上生成LR1项集，这样一来就能同时达到减少项集的数量并且能够识别更多的文法
 所以几乎所有的语法分析器都使用了LALR来构造语法分析表.
@@ -16,7 +16,7 @@
 
 # CFLex
 
-![](pic2.png)
+![](resources/cflex.png)
 CFlex实际上是一个正则表达式解析器。目前能够支持以下的正则表达式特性：
 
 + \+
@@ -69,8 +69,8 @@ CBison希望能够做到通过作图的方式理解复杂的编译原理。
 
 
 
-![dfa](pic1.png)
-![](pic3.png)
+![dfa](resources/pic1.png)
+![](resources/pic3.png)
 
 ## 左结合、右结合与优先级的真正含义
 
