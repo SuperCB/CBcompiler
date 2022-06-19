@@ -5,8 +5,13 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 include_directories(${INCLUDE_DIR})
+
+include_directories(yaml-cpp/yaml-cpp/include)
+
 # gmock gtest https://crascit.com/2015/07/25/cmake-gtest/
 configure_file("${PROJECT_SOURCE_DIR}/gtest_CMakeLists.txt.in" googletest-download/CMakeLists.txt)
+
+
 execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
         WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/googletest-download")
 execute_process(COMMAND "${CMAKE_COMMAND}" --build .
@@ -15,10 +20,12 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)  # don't override our compile
 add_subdirectory("${CMAKE_BINARY_DIR}/googletest-src" "${CMAKE_BINARY_DIR}/googletest-build")
 
 add_subdirectory(test)
+
+
 file(GLOB_RECURSE CBlibrary_source ${PROJECT_SOURCE_DIR}/src/*/*.cpp ${PROJECT_SOURCE_DIR}/src/*/*.h)
 
-include_directories(yaml-cpp-master/include)
-add_subdirectory(yaml-cpp-master)
+
+add_subdirectory(yaml-cpp/yaml-cpp)
 
 
 add_library(CBlibrary
