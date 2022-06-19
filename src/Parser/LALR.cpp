@@ -5,36 +5,36 @@
 #include "LALR.h"
 
 
-CBCompiler::LALR::LALR(json src) : terminator_cnt(0), nonterminator_cnt(0) {
+CBCompiler::LALR::LALR(YAML::Node yaml) : terminator_cnt(0), nonterminator_cnt(0) {
 
 
-    auto prijson = src["priority"];
+    auto prijson = yaml["priority"];
 
 //解决语法之间的优先级问题
     for (auto iter = prijson.begin(); iter != prijson.end(); ++iter) {
-        uint lev = iter.value()["level"];
-
-        for (auto token_iter = iter.value()["tokens"].begin();
-             token_iter != iter.value()["tokens"].end(); ++token_iter) {
-            priority[token_iter.value()] = lev;
+        auto content = *iter;
+        uint lev = content["level"].as<uint>();
+        for (auto token_iter = content["tokens"].begin();
+             token_iter != content["tokens"].end(); ++token_iter) {
+            auto token = token_iter.operator*().as<std::string>();
+            priority[token] = lev;
         }
     }
 
     priority["$"] = -1;
 
-    auto exprs = src["exprs"];
-    auto rootExpr = exprs.find("root");
-    assert(rootExpr != exprs.end());
-    rootstr = rootExpr.value();
+    auto exprs = yaml["exprs"];
+    auto rootExpr = yaml["root"];
+    rootstr = rootExpr.as<std::string>();
 
 
 
     //first get all unendtoken
     for (auto iter = exprs.begin(); iter != exprs.end(); ++iter) {
-        if (iter == rootExpr)continue;
-        assert(typeid(iter.key()) == typeid(std::string));
-        std::string lv = iter.key();
 
+        auto content = *iter;
+        auto lv = content["lval"].as<std::string>();
+        dbg(lv);
         expressions.insert({lv, {}});
         nonterminator2id[lv] = nonterminator_cnt++;
     }
@@ -43,25 +43,41 @@ CBCompiler::LALR::LALR(json src) : terminator_cnt(0), nonterminator_cnt(0) {
     ::uint expressionid = 0;
 
     for (auto iter = exprs.begin(); iter != exprs.end(); ++iter) {
-        if (iter == rootExpr)continue;
-        auto rv = iter.value();
-        auto valist = rv["rval"];
-        for (auto exiter = valist.begin(); exiter != valist.end(); ++exiter) {
+
+
+        auto exprescontent = *iter;
+        auto rvals = exprescontent["rval"];
+
+
+        for (auto rvaliter = rvals.begin(); rvaliter != rvals.end(); ++rvaliter) {
             std::vector<LRToken> lrtokens;
-            for (auto exi = exiter.value()["val"].begin(); exi != exiter.value()["val"].end(); ++exi) {
-                std::string little_expr = exi.value();
+
+            auto rvalcontent = *rvaliter;
+            for (auto exi = rvalcontent["val"].begin(); exi != rvalcontent["val"].end(); ++exi) {
+                auto little_expr = exi.operator*().as<std::string>();
+
+
                 LRType type_;
-                if (expressions.count(little_expr) == 0) {
-                    type_ = LRType::END;
-                    ++terminator_cnt;
+
+                if (little_expr == "empty") {
+                    type_ = LRType::EMPTY;
                 } else {
-                    type_ = LRType::UNEND;
+                    if (expressions.count(little_expr) == 0) {
+                        type_ = LRType::END;
+                        dbg(little_expr);
+                        ++terminator_cnt;
+                    } else {
+                        type_ = LRType::UNEND;
+                    }
                 }
-                dbg(little_expr);
+
+
                 lrtokens.emplace_back(type_, little_expr);
+
+
             }
-            expression_action[++expressionid] = exiter.value()["act"];
-            expressions[iter.key()].push_back({std::move(lrtokens), expressionid});
+            expression_action[++expressionid] = rvalcontent["act"].as<std::string>();
+            expressions[exprescontent["lval"].as<std::string>()].push_back({std::move(lrtokens), expressionid});
         }
     }
     GetLR0groups();
@@ -89,8 +105,10 @@ void CBCompiler::LALR::GetLR0groups() {
             LRItem lr0item = closure_items[i];
             LRToken lr0token;
             bool flag = lr0item.TokenAfterPos(lr0token);
+
+
             if (!flag) {
-//                dbg("Accept");
+
             } else {
                 token2lr0item[lr0token.str].push_back(i);
             }
@@ -106,6 +124,8 @@ void CBCompiler::LALR::GetLR0groups() {
             AddEdge(top_lro_group->id, ne_lr0_group->id, k);
         }
     }
+
+
     {
         auto cmp = [](LR0group *l, LR0group *r) -> bool {
             return l->id < r->id;
@@ -225,7 +245,7 @@ void CBCompiler::LALR::DrawLR(std::string outf, bool closure) {
     }
 
     for (auto &edge: trans_graph) {
-        out << string_format("group_%d ->group_%d [label=%s];", std::get<0>(edge), std::get<1>(edge),
+        out << string_format("group_%d ->group_%d [label=%s fontsize=25];", std::get<0>(edge), std::get<1>(edge),
                              std::get<2>(edge).str.c_str())
             << std::endl;
     }
@@ -264,20 +284,58 @@ std::set<std::string> CBCompiler::LALR::GetFirst(const std::vector<LRToken> &tok
  * @return
  */
 std::set<std::string> CBCompiler::LALR::GetFirst(const CBCompiler::LRToken &token) {
-    if (token.type == LRType::END) {
+    //对于终结符来说
+    if (token.type == LRType::END || token.type == LRType::EMPTY) {
         return {token.str};
     }
     std::set<std::string> res;
 
+
     auto rexpres = expressions[token.str];
-    for (auto &tokens: rexpres) {
-        auto token = tokens.expression[0];
-        if (token.type == LRType::UNEND) {
-            auto first = GetFirst(token);
-            res.insert(first.begin(), first.end());
-        } else {
-            res.insert(token.str);
+    for (auto &expre: rexpres) {
+        uint loc = 0;
+        while (loc < expre.expression.size()) {
+            auto to = expre.expression[loc];
+            bool stop = false;
+            switch (to.type) {
+                case LRType::EMPTY:
+                    loc++;
+                    break;
+                case LRType::END:
+                    res.insert(to.str);
+                    stop = true;
+                    break;
+                case LRType::UNEND:
+                    if (to.str == token.str) { loc++; }
+                    else {
+                        auto result = GetFirst(to);
+                        assert(result.count("empty") <= 1);
+                        if (result.count("empty") == 1) {
+
+                            for (auto &first: result) {
+                                if (first == "empty")continue;
+                                res.insert(first);
+                            }
+                            loc++;
+                        } else {
+                            res.insert(result.begin(), result.end());
+                            stop = true;
+                        }
+                    }
+                    break;
+                default:
+                    break;
+            }
+            if (stop)
+                break;
         }
+
+        //这就说明所有的项都包含empty
+        if(loc==expre.expression.size())
+        {
+            res.insert("empty");
+        }
+
     }
     return res;
 }
@@ -307,7 +365,7 @@ void CBCompiler::LALR::GenerateLR1Groups() {
                 uint group_id = top->id;
                 uint trans_to_id = StateTransfer(group_id, token.str);
                 auto trans_group = groups[trans_to_id];
-                dbg(group_id, trans_to_id);
+//                dbg(group_id, trans_to_id);
 
                 bool f = trans_group->AddNewLookForwardToken(closure_item);
                 if (f) {
@@ -384,9 +442,11 @@ void CBCompiler::LALR::GenerateParseChart(std::ofstream &out, std::map<std::stri
 
 //
     DrawLALR("graph.dot");
-
-
-    assert(terminator2id.size() == terminator_cnt);
+    dbg(terminator2id.size());
+    dbg(terminator_cnt);
+    std::cout << terminator2id.size() << std::endl;
+    std::cout << terminator_cnt << std::endl;
+//    assert(terminator2id.size() == terminator_cnt);
 
     uint row = groups.size();
     uint col = terminator2id.size();
@@ -494,6 +554,18 @@ void CBCompiler::LALR::GenerateParseChart(std::ofstream &out, std::map<std::stri
     out << std::endl;
 
 
+    out << R"(void parse(){)";
+    out << R"(while (true) {
+    Act act = ACTION[state][token.kind];
+    switch (act.kind) {
+      case Act::Shift: {
+        stk.emplace_back(token, act.val);
+        state = act.val;
+        token = lexer.next();
+        break;
+      }
+      case Act::Reduce: {
+        StackItem __;)";
     out << "switch(act.val){";
 
     for (auto [k, v]: expression_action) {
@@ -504,6 +576,7 @@ void CBCompiler::LALR::GenerateParseChart(std::ofstream &out, std::map<std::stri
     out << R"(default:
             break;})";
 
+    out << R"(}}}})";
 
 }
 
@@ -525,7 +598,7 @@ void CBCompiler::LALR::DrawLALR(std::string outf) {
 
         out << R"(<TR><TD COLSPAN="2" BGCOLOR="darkslategray2"><FONT POINT-SIZE="30" COLOR="red">)";
         out << string_format("Group  %d", lr_group->id);
-        out << "</FONT></TD></TR>)" << std::endl;
+        out << "</FONT></TD></TR>" << std::endl;
 
         for (auto &core_item: lr_group->core_items) {
             out << R"(<TR><TD BGCOLOR="pink">)" << std::endl;

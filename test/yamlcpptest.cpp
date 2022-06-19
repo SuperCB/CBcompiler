@@ -8,11 +8,12 @@
 
 
 TEST(Regex2DFATest, test1) {
-    const std::string yamlFilePath = "/home/supercb/mycode/CppProjects/CBcompiler/test/cbsion.yaml";
+    const std::string yamlFilePath = "/home/supercb/mycode/CppProjects/CBcompiler/test/withempty.yaml";
     YAML::Node root = YAML::LoadFile(yamlFilePath);
     auto expres = root["cbsion"]["exprs"];
     for (auto begin = expres.begin(); begin != expres.end(); begin++) {
         auto c = *begin;
+
         std::cout << c.Type();
         std::cout << c["lval"];
     }

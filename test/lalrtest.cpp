@@ -4,35 +4,31 @@
 #include "gtest/gtest.h"
 #include "../src/Regex2Dfa/CFlex.h"
 #include "../src/Parser/LALR.h"
-#include "../include/json.hpp"
 #include <iostream>
-
+#include <yaml-cpp/yaml.h>
 TEST(LR1Testwithclosure, test1) {
 
-    json bnfs;
-
-    std::ifstream jfile("/home/supercb/mycode/CppProjects/CBcompiler/test/lr1test.json");
-    jfile >> bnfs;
-    std::cout << bnfs;
-    CBCompiler::LALR lalr(bnfs["cbsion"]);
-    lalr.DrawLR("lr1testwithclosure.dot", true);
+    const std::string yamlFilePath = "/home/supercb/mycode/CppProjects/CBcompiler/yamls/withempty.yaml";
+    YAML::Node root = YAML::LoadFile(yamlFilePath);
+    CBCompiler::LALR lalr(root["cbsion"]);
+   auto firsts= lalr.GetFirst({CBCompiler::LRType::UNEND, "T"});
+    for (auto str: firsts) {
+        std::cout << str << std::endl;
+    }
+//    lalr.DrawLR("lr1testwithclosure.dot", true);
 
 }
 
 TEST(LR1Testwithoutclosure, test1) {
-    json bnfs;
-    std::ifstream jfile("/home/supercb/mycode/CppProjects/CBcompiler/test/lr1test.json");
-    jfile >> bnfs;
-    std::cout << bnfs;
-    CBCompiler::LALR lalr(bnfs["cbsion"]);
+    const std::string yamlFilePath = "/home/supercb/mycode/CppProjects/CBcompiler/test/withempty.yaml";
+    YAML::Node root = YAML::LoadFile(yamlFilePath);
+    CBCompiler::LALR lalr(root["cbsion"]);
     lalr.DrawLR("lr1testwithoutclosure.dot", false);
 }
 
 TEST(LALRTestwithclosure, test1) {
-    json bnfs;
-    std::ifstream jfile("/home/supercb/mycode/CppProjects/CBcompiler/test/lr1test.json");
-    jfile >> bnfs;
-    std::cout << bnfs;
-    CBCompiler::LALR lalr(bnfs["cbsion"]);
+    const std::string yamlFilePath = "/home/supercb/mycode/CppProjects/CBcompiler/test/withempty.yaml";
+    YAML::Node root = YAML::LoadFile(yamlFilePath);
+    CBCompiler::LALR lalr(root["cbsion"]);
     lalr.DrawLALR("lalr1test.dot");
 }

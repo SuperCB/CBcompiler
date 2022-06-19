@@ -25,9 +25,9 @@ namespace CBCompiler {
         using uint32 = unsigned int;
 
     public:
-        CFlex(std::string_view regexstr);
+        CFlex(std::string regexstr);
 
-        CFlex(const CFlex &regex2Dfa) = delete;
+//        CFlex(const CFlex &regex2Dfa) = delete;
 
         CFlex operator=(const CFlex &regex2Dfa) = delete;
 

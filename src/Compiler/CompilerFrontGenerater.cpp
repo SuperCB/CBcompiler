@@ -6,20 +6,18 @@
 
 
 CompilerFrontGenerater::CompilerFrontGenerater(std::string addr) : token_cnt(0) {
-    json bnfs;
-    assert(!addr.empty());
-    std::ifstream jfile(addr);
-    jfile >> bnfs;
-    std::cout << bnfs;
-    auto cflex = bnfs["cblex"];
+    YAML::Node root = YAML::LoadFile(addr);
+
+
+    auto cflex = root["cblex"];
     for (auto iter = cflex.begin(); iter != cflex.end(); ++iter) {
-//        std::cout << iter.value()["val"] << std::endl;
-//        std::cout << iter.value()["name"] << std::endl;
-        val2id[iter.value()["val"]] = token_cnt;
-        name2id[iter.value()["name"]] = token_cnt;
+        auto con = *iter;
+
+        val2id[con["val"].as<std::string>()] = token_cnt;
+        name2id[con["name"].as<std::string>()] = token_cnt;
         token_cnt++;
     }
-    lalr = new CBCompiler::LALR(bnfs["cbsion"]);
+    lalr = new CBCompiler::LALR(root["cbsion"]);
     lalr->DrawLALR("two1.dot");
 }
 
@@ -38,6 +36,11 @@ std::string string_format(const std::string &format, Args ... args) {
 void CompilerFrontGenerater::Generate() {
     std::ofstream out("parse.cpp");
 
+
+    out << R"(
+#include "../src/Regex2Dfa/CFlex.h"
+#include <vector>
+#include <utility>)";
 
     out << R"(using uint=unsigned int;)";
 
@@ -59,21 +62,22 @@ void CompilerFrontGenerater::Generate() {
 
     out << "};\n";
 
-    out << "{";
+    out << "std::vector<std::pair<CBCompiler::CFlex, int> > tokens{";
     for (auto [k, v]: val2id) {
         out << "{";
-        out << string_format("CFlex(\"%s\")", k.c_str());
+        out << string_format("CBCompiler::CFlex(\"%s\")", k.c_str());
         out << ",";
         out << v;
         out << "},\n";
     }
-    out << "}";
+    out << "};";
 
     lalr->GenerateParseChart(out, name2id);
     out.close();
 }
 
 CompilerFrontGenerater::~CompilerFrontGenerater() {
+
     delete lalr;
 }
 

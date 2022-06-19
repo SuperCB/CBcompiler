@@ -7,7 +7,6 @@
 #include <fstream>
 #include <iostream>
 #include <set>
-#include "../../include/json.hpp"
 #include "LRUtil.h"
 #include "../../include/dbg.h"
 #include <typeinfo>
@@ -16,17 +15,16 @@
 #include "SetVector.h"
 #include <vector>
 
+#include <yaml-cpp/yaml.h>
+
 #define ACCEPT_EXPR_ID 0
-using json = nlohmann::json;
 
 namespace CBCompiler {
-
 
     struct ExpressionInfor {
         std::vector<LRToken> expression;
         uint id;
     };
-
 
     enum class ActionItemType {
         Shift,
@@ -40,8 +38,7 @@ namespace CBCompiler {
         ActionItemType type;
         uint val;
 
-        std::string &parse() {
-        }
+
     };
 
     struct GotoItem {
@@ -55,7 +52,7 @@ namespace CBCompiler {
     public:
         LALR() = delete;
 
-        explicit LALR(json exprs);
+        explicit LALR(YAML::Node yaml);
 
 
         void DrawLR(std::string outf, bool closure);
@@ -63,6 +60,10 @@ namespace CBCompiler {
         void DrawLALR(std::string outf);
 
         void GenerateParseChart(std::ofstream &out, std::map<std::string, uint> terminator2id);
+
+
+        std::set<std::string> GetFirst(const LRToken &token);
+        std::set<std::string> GetFirst(const std::vector<LRToken> &tokens);
 
     private:
         std::vector<LRItem> GetLR0Closure(const std::vector<LRItem> &coreitems);
@@ -80,9 +81,7 @@ namespace CBCompiler {
 
         void GenerateLR1Groups();
 
-        std::set<std::string> GetFirst(const LRToken &token);
 
-        std::set<std::string> GetFirst(const std::vector<LRToken> &tokens);
 
         std::vector<LRItem> GetLR1Closure(const LRItem &core_item);
 

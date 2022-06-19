@@ -8,12 +8,10 @@
 #include <utility>
 #include <map>
 #include "../include/dbg.h"
-#include "../include/json.hpp"
 #include "../Regex2Dfa/CFlex.h"
 #include "../Parser/LALR.h"
 #include <fstream>
 
-using json = nlohmann::json;
 
 class CompilerFrontGenerater {
     using uint = unsigned int;

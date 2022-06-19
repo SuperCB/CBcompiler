@@ -4,7 +4,6 @@
 #include "gtest/gtest.h"
 #include "../src/Regex2Dfa/CFlex.h"
 #include "../src/Parser/LALR.h"
-#include "../include/json.hpp"
 
 TEST(Regex2DFATest, test1) {
     CBCompiler::CFlex regex2Dfa("\\d+");
@@ -24,4 +23,10 @@ TEST(Regex2DFATest, test3) {
 TEST(Regex2DFATest, test4) {
     CBCompiler::CFlex regex2Dfa("a*bb");
     EXPECT_EQ(regex2Dfa.matched("aaaaaabb"), true);
+}
+
+TEST(Regex2DFATest, test5) {
+    CBCompiler::CFlex regex2Dfa("\\d+|(0x[0-9a-fA-F]+)");
+    regex2Dfa.DrawDot("fuck.dot");
+//    EXPECT_EQ(regex2Dfa.matched("aaaaaabb"), true);
 }

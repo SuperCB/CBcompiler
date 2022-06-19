@@ -1,0 +1,77 @@
+# 如果觉得好用，请收藏或则分享本站
+cbsion:
+  root: E
+  exprs:
+    - lval: E
+      rval:
+        - val:
+            - T
+            - Ep
+          act: 发送到
+    - lval : Ep
+      rval :
+        - val :
+            - add
+            - T
+            - Ep
+          act : fd
+        - val :
+            - empty
+          act : f
+    - lval : T
+      rval :
+        - val :
+            - F
+            - Tp
+          act : fdsa
+    - lval : Tp
+      rval :
+        - val :
+            - mul
+            - F
+            - Tp
+          act : fad
+        - val :
+            - empty
+          act : fa
+    - lval : F
+      rval :
+        - val :
+            - Lpar
+            - E
+            - Rpar
+          act : fdas
+        - val :
+            - id
+          act : fasd
+
+
+
+
+
+  priority:
+    - tokens:
+        - Or
+      level: 1
+    - tokens:
+        - And
+      level: 2
+    - tokens:
+        - Eq
+        - Ne
+      level: 3
+    - tokens:
+        - Lt
+        - Le
+        - Ge
+        - Gt
+      level: 4
+    - tokens:
+        - Add
+        - Sub
+      level: 5
+    - tokens:
+        - Mul
+        - Div
+        - Mod
+      level: 6

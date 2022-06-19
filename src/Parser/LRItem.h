@@ -13,7 +13,7 @@
 
 namespace CBCompiler {
     enum class LRType {
-        END, UNEND
+        END, UNEND, EMPTY
     };
 
     class LRToken {
@@ -86,6 +86,7 @@ namespace CBCompiler {
         [[nodiscard]] const std::vector<LRToken> &GetRexprs() const {
             return rexprs;
         }
+
         bool GetStrBeforeLoc(std::string &str) {
             if (ploc < 2)return false;
             if (rexprs[ploc - 2].type == LRType::UNEND)return false;

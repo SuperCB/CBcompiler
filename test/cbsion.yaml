@@ -2,7 +2,7 @@
 cbsion:
   root: E
   exprs:
-    - lval: Eg gsdfg sdfg
+    - lval: E
       rval:
         - val:
             - E
@@ -24,29 +24,29 @@ cbsion:
           act: '[id]'
 
 
-priority:
-  - tokens:
-      - Or
-    level: 1
-  - tokens:
-      - And
-    level: 2
-  - tokens:
-      - Eq
-      - Ne
-    level: 3
-  - tokens:
-      - Lt
-      - Le
-      - Ge
-      - Gt
-    level: 4
-  - tokens:
-      - Add
-      - Sub
-    level: 5
-  - tokens:
-      - Mul
-      - Div
-      - Mod
-    level: 6
+  priority:
+    - tokens:
+        - Or
+      level: 1
+    - tokens:
+        - And
+      level: 2
+    - tokens:
+        - Eq
+        - Ne
+      level: 3
+    - tokens:
+        - Lt
+        - Le
+        - Ge
+        - Gt
+      level: 4
+    - tokens:
+        - Add
+        - Sub
+      level: 5
+    - tokens:
+        - Mul
+        - Div
+        - Mod
+      level: 6

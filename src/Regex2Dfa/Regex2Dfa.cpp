@@ -143,7 +143,7 @@ namespace CBCompiler {
         token_stack.push(token_F);
     }
 
-    CFlex::CFlex(std::string_view regexstr): node_id(0) {
+    CFlex::CFlex(std::string regexstr): node_id(0) {
 
         InitTheChart();
         std::stack<uint32> states;
