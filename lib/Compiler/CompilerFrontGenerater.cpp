@@ -59,7 +59,7 @@ void CompilerFrontGenerater::Generate() {
     for (auto [k, v]: name2id) {
         out << string_format("%s=%u,\n", k.c_str(), v);
     }
-
+    out << string_format("Over=%u,\n", name2id.size() + 1);
     out << "};\n";
 
     out << "std::vector<std::pair<CBCompiler::CFlex, int> > tokens{";

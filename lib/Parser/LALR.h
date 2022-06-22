@@ -63,7 +63,7 @@ namespace CBCompiler {
 
 
         std::set<std::string> GetFirst(const LRToken &token);
-        std::set<std::string> GetFirst(const std::vector<LRToken> &tokens);
+        std::set<std::string> GetFirst( std::vector<LRToken> &tokens);
 
     private:
         std::vector<LRItem> GetLR0Closure(const std::vector<LRItem> &coreitems);

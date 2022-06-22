@@ -4,11 +4,11 @@ with open('token.txt') as f:
 with open('result.txt','w') as res:
     for item in data:
         content = '''
-'{token}'   {{    
+'{token}'  {{    
              #ifdef DEBUG
               printf("%s\\n",yytext);
              #endif
-     
+             lex_next({type},yytext);
              }} 
     '''
         token, type = item.split(' ')[0], item.split(' ')[-1]

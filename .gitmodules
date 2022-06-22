@@ -1,3 +1,6 @@
 [submodule "yaml-cpp/yaml-cpp"]
 	path = yaml-cpp/yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp.git
+[submodule "sysyruntimelibrary"]
+	path = sysyruntimelibrary
+	url = https://gitlab.eduxiji.net/windcome/sysyruntimelibrary.git

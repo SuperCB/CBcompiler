@@ -9,7 +9,7 @@
 #include <string_view>
 //
 #define DEBUG 1
-enum class TokenType {
+enum  TokenType {
     Add = 9,
     And = 20,
     Assign = 22,

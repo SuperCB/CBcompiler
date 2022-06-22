@@ -1,6 +1,4 @@
-//
-// Created by supercb on 22-4-26.
-//
+
 
 #include "LALR.h"
 
@@ -34,7 +32,6 @@ CBCompiler::LALR::LALR(YAML::Node yaml) : terminator_cnt(0), nonterminator_cnt(0
 
         auto content = *iter;
         auto lv = content["lval"].as<std::string>();
-        dbg(lv);
         expressions.insert({lv, {}});
         nonterminator2id[lv] = nonterminator_cnt++;
     }
@@ -94,12 +91,14 @@ void CBCompiler::LALR::GetLR0groups() {
     std::queue<CBCompiler::LR0group *> que;
 
     sta->id = lr0_group_id++;
-    que.push(sta);//jia ru zengguangwenfa
+    que.push(sta);
     groups.emplace_back(sta);
     while (!que.empty()) {
         auto top_lro_group = que.front();
         que.pop();
         auto closure_items = GetLR0Closure(top_lro_group->core_items);
+
+
         std::unordered_map<std::string, std::vector<unsigned int>> token2lr0item;
         for (unsigned int i = 0; i < closure_items.size(); ++i) {
             LRItem lr0item = closure_items[i];
@@ -110,17 +109,24 @@ void CBCompiler::LALR::GetLR0groups() {
             if (!flag) {
 
             } else {
+                if (lr0token.str == "empty")continue;
+
                 token2lr0item[lr0token.str].push_back(i);
             }
         }
         for (auto &[k, ids]: token2lr0item) {
             std::vector<LRItem> n_group_cores;
+
+
             for (auto &i: ids) {
                 closure_items[i].PointLocAdd();
                 n_group_cores.push_back(closure_items[i]);
             }
             LR0group *ne_lr0_group = new LR0group(n_group_cores);
+
+
             GenerateNewLr0Group(ne_lr0_group, que);
+
             AddEdge(top_lro_group->id, ne_lr0_group->id, k);
         }
     }
@@ -153,7 +159,7 @@ std::vector<CBCompiler::LRItem> CBCompiler::LALR::GetLR0Closure(const std::vecto
         } else {
 
             if (token.IsUnend()) {
-                dbg("unend token", token.str);
+//                dbg("unend token", token.str);
                 for (auto &expres: expressions[token.str]) {
                     LRItem tlr0item{token.str, expres.expression, 0, expres.id};
                     if (!lr0items.find(tlr0item)) {
@@ -272,10 +278,20 @@ void CBCompiler::LALR::RemoveDuplicateTrans(uint group_id, std::string str) {
  * @param tokens
  * @return
  */
-std::set<std::string> CBCompiler::LALR::GetFirst(const std::vector<LRToken> &tokens) {
-    assert(!tokens.empty());
+std::set<std::string> CBCompiler::LALR::GetFirst(std::vector<LRToken> &tokens) {
+    assert(tokens.size() == 2);
 
-    return GetFirst(tokens[0]);
+    std::set<std::string> res;
+
+    auto first_result = GetFirst(tokens[0]);
+
+    res.insert(first_result.begin(), first_result.end());
+
+    if (res.count("empty") == 1) {
+        auto second_result = GetFirst(tokens[1]);
+        res.insert(second_result.begin(), second_result.end());
+    }
+    return res;
 }
 
 /**
@@ -331,8 +347,7 @@ std::set<std::string> CBCompiler::LALR::GetFirst(const CBCompiler::LRToken &toke
         }
 
         //这就说明所有的项都包含empty
-        if(loc==expre.expression.size())
-        {
+        if (loc == expre.expression.size()) {
             res.insert("empty");
         }
 
@@ -350,7 +365,7 @@ void CBCompiler::LALR::GenerateLR1Groups() {
     root.temp.insert("$");
 
     que.push(0);
-
+//发现传播与自发生成lr1项集族算法
     while (!que.empty()) {
         auto top_id = que.front();
         que.pop();
@@ -363,6 +378,8 @@ void CBCompiler::LALR::GenerateLR1Groups() {
                 bool flag = closure_item.TokenAfterPos(token);
                 if (!flag)continue;
                 uint group_id = top->id;
+
+
                 uint trans_to_id = StateTransfer(group_id, token.str);
                 auto trans_group = groups[trans_to_id];
 //                dbg(group_id, trans_to_id);
@@ -395,28 +412,49 @@ std::vector<CBCompiler::LRItem> CBCompiler::LALR::GetLR1Closure(const LRItem &co
         if (!flag) {
         } else {
             if (token.IsUnend()) {
-                for (auto &expressinfo: expressions[token.str]) {
-                    LRToken token2;
-                    bool flag = top.TokenTwoAfterPos(token2);
-                    std::vector<LRToken> belta_a;
-                    std::set<std::string> look_forward;
-                    if (flag) {
-                        //if twoafterpos exists
-                        auto first_set = GetFirst(token2);
-                        look_forward.insert(first_set.begin(), first_set.end());
-                    } else {
-                        // expressinfo
-                        look_forward = top.look_forward;
-                    }
 
-                    LRItem belta_item{token.str, expressinfo.expression, 0, expressinfo.id};
+                for (auto look_forward_token: top.look_forward) {
 
-                    belta_item.look_forward = look_forward;
-                    if (!lr1_items.find(belta_item)) {
-                        itemsque.push(belta_item);
-                        lr1_items.push_back(belta_item);
+
+                    for (auto &expressinfo: expressions[token.str]) {
+                        LRToken token2;
+
+                        bool flag = top.TokenTwoAfterPos(token2);
+
+
+                        std::vector<LRToken> belta_a;
+                        std::set<std::string> look_forward;
+                        if (flag) {
+                            //if twoafterpos exists
+
+
+                            std::vector<LRToken> beta_alpha;
+                            beta_alpha.push_back(token2);
+                            beta_alpha.push_back({LRType::END, look_forward_token});
+                            auto first_set = GetFirst(beta_alpha);
+
+                            for (auto &tok: first_set) {
+                                if (tok != "empty") {
+                                    look_forward.insert(tok);
+                                }
+                            }
+
+
+                        } else {
+                            // expressinfo
+                            look_forward = top.look_forward;
+                        }
+
+                        LRItem belta_item{token.str, expressinfo.expression, 0, expressinfo.id};
+
+                        belta_item.look_forward = look_forward;
+                        if (!lr1_items.find(belta_item)) {
+                            itemsque.push(belta_item);
+                            lr1_items.push_back(belta_item);
+                        }
                     }
                 }
+
             } else {
                 continue;
             }
@@ -442,18 +480,16 @@ void CBCompiler::LALR::GenerateParseChart(std::ofstream &out, std::map<std::stri
 
 //
     DrawLALR("graph.dot");
-    dbg(terminator2id.size());
-    dbg(terminator_cnt);
-    std::cout << terminator2id.size() << std::endl;
-    std::cout << terminator_cnt << std::endl;
-//    assert(terminator2id.size() == terminator_cnt);
+
+
+    terminator2id["$"] = terminator2id.size();
 
     uint row = groups.size();
     uint col = terminator2id.size();
     std::vector<std::vector<CBCompiler::ActionItem>> actions(row, std::vector<CBCompiler::ActionItem>(col,
                                                                                                       {CBCompiler::ActionItemType::Err,
                                                                                                        0}));
-    std::vector<std::vector<uint>> gotos(row, std::vector<uint>(col, 0));
+    std::vector<std::vector<uint>> gotos(row, std::vector<uint>(nonterminator_cnt, 0));
 // 所有goto表中的内容以及action表中关于shift的内容都在trans_graph
     for (auto &edge: trans_graph) {
         uint from = std::get<0>(edge);
@@ -477,12 +513,24 @@ void CBCompiler::LALR::GenerateParseChart(std::ofstream &out, std::map<std::stri
 
     for (auto &lr_group: groups) {
         for (auto &core_item: lr_group->core_items) {
-            if (core_item.IsOver()) {
+
+            LRToken token;
+            bool flag = core_item.TokenAfterPos(token);
+            bool empty = false;
+            if (flag) {
+                auto result = GetFirst(token);
+                if (result.count("empty")) {
+                    empty = true;
+                }
+            }
+            if (!flag || empty) {
                 for (auto &look_forward: core_item.look_forward) {
                     uint row_loc = lr_group->id;
                     uint col_loc = terminator2id[look_forward];
+                    dbg(look_forward);
                     uint val = core_item.expression_id;
                     if (val == ACCEPT_EXPR_ID) {
+                        dbg("fdasfad");
                         actions[row_loc][col_loc].type = CBCompiler::ActionItemType::Accept;
                         actions[row_loc][col_loc].val = ACCEPT_EXPR_ID;
                     } else {
@@ -492,6 +540,7 @@ void CBCompiler::LALR::GenerateParseChart(std::ofstream &out, std::map<std::stri
                         }
                     }
                 }
+
             }
         }
     }
@@ -537,7 +586,7 @@ void CBCompiler::LALR::GenerateParseChart(std::ofstream &out, std::map<std::stri
     out << std::endl;
 
     //生成GOTO表
-    out << string_format("const static uint Goto [%u][%u]={", row, col);
+    out << string_format("const static uint Goto [%u][%u]={", row, nonterminator_cnt);
     for (uint i = 0; i < gotos.size(); ++i) {
         out << "{";
         for (uint j = 0; j < gotos[i].size(); ++j) {
@@ -576,7 +625,11 @@ void CBCompiler::LALR::GenerateParseChart(std::ofstream &out, std::map<std::stri
     out << R"(default:
             break;})";
 
-    out << R"(}}}})";
+    out << R"(
+           }
+            }
+             }
+              })";
 
 }
 
@@ -631,7 +684,7 @@ void CBCompiler::LALR::DrawLALR(std::string outf) {
 //去除二义性，去除二义性并不发生在LALR表的构造过程中，而是发生在LALR表构造完成后
 bool CBCompiler::LALR::ComPriority(CBCompiler::LRItem &lrItem, const std::string &look) {
 
-    if (!lrItem.IsOver())return true;
+    dbg(look);
     std::string l_op;
     if (!lrItem.GetStrBeforeLoc(l_op)) {
         return true;

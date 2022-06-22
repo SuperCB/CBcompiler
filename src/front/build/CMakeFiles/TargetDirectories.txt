@@ -1,0 +1,3 @@
+/home/supercb/mycode/CppProjects/CBcompiler/src/front/build/CMakeFiles/lex.dir
+/home/supercb/mycode/CppProjects/CBcompiler/src/front/build/CMakeFiles/edit_cache.dir
+/home/supercb/mycode/CppProjects/CBcompiler/src/front/build/CMakeFiles/rebuild_cache.dir
