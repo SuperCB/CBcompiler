@@ -4,4 +4,4 @@ project(CBcompiler LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 
 
-add_executable(lex  lex.cpp)
+add_executable(front lex.cpp parse.cpp)

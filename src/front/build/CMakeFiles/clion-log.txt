@@ -1,4 +1,0 @@
-/snap/clion/193/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/snap/clion/193/bin/ninja/linux/ninja -G Ninja -S /home/supercb/mycode/CppProjects/CBcompiler/src/front -B /home/supercb/mycode/CppProjects/CBcompiler/src/front/build
--- Configuring done
--- Generating done
--- Build files have been written to: /home/supercb/mycode/CppProjects/CBcompiler/src/front/build
