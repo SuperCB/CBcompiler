@@ -9,7 +9,7 @@
 #include <string_view>
 //
 #define DEBUG 1
-enum  TokenType {
+enum  class TokenType {
     Add = 9,
     And = 20,
     Assign = 22,
@@ -44,11 +44,11 @@ enum  TokenType {
     Sub = 10,
     Void = 0,
     While = 3,
-    Over = 35,
+    Over = 34,
 };
 struct Token {
     TokenType type;
-    std::string_view piece;
+    std::string_view val;
     uint line, col;
 };
 int chars = 0;
@@ -59,5 +59,5 @@ std::vector<Token> tokens;
 
 
 void lex_next(TokenType type, char *yytext) {
-
+    tokens.push_back({type, yytext});
 }

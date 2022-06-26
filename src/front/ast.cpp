@@ -3,6 +3,5 @@
 //
 
 #include "ast.h"
-#ifdef
 
-#e
+
