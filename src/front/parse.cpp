@@ -6,7 +6,7 @@
 #include<stack>
 #include <iostream>
 #include <cassert>
-#include "ast.h"
+#include "../ast.h"
 
 using uint = unsigned int;
 
@@ -317,7 +317,7 @@ const static uint Goto [147][17]={{ 0,6,5,0,0,0,0,3,0,0,0,0,0,0,0,0,0},
                                   { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
                                   { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
                                   { 0,0,83,0,0,0,0,0,85,0,84,0,146,0,0,0,0},
-                                  { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+                                  { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
 };
 
 extern int yylex();
@@ -361,8 +361,6 @@ Program *parse() {
                         stk.pop();
                         Program _1(std::move(*std::get_if<Program>(&stk.top().first)));
                         stk.pop();
-
-
                         for (auto &decl: _2) {
                             decl.is_glob = true;
                             _1.func_or_decl.emplace_back(decl);
@@ -380,18 +378,23 @@ Program *parse() {
                         break;
                     }
                     case 3:{//  Program  Decl
-
+                        std::vector<Decl> _1(
+                                std::move(*std::get_if<std::vector<Decl>>(&stk.top().first)));
                         stk.pop();
-
-                        Program _1{};
-                        __ = _1;
+                        Program _2;
+                        for(auto item:_1)
+                        {
+                            _2.func_or_decl.emplace_back(item);
+                        }
+                        __ = _2;
                         break;
                     }case 4:{//  Program  Func
+                        Func _1(std::move(*std::get_if<Func>(&stk.top().first)));
                         stk.pop();
 
-
-                        Program _1{};
-                        __ = _1;
+                        Program _2;
+                        _2.func_or_decl.emplace_back(_1);
+                        __ = _2;
                         break;
                     }
                     case 5: {//  Decl  Const  Int  DeclList  Semi
@@ -471,22 +474,23 @@ Program *parse() {
                         break;
                     }
                     case 12: {//  Decl1  ID
-
                         Token _1(std::move(*std::get_if<Token>(&stk.top().first)));
                         stk.pop();
                         __ = Decl(false, false, false, _1.val, {}, {});
-
                         break;
                     }
                     case 13: {//  InitList  LBrc  InitList1  RBrc
                         [[maybe_unused]] Token _3(std::move(*std::get_if<Token>(&stk.top().first)));
                         stk.pop();
 
-                        [[maybe_unused]] InitList _2(std::move(*std::get_if<InitList>(&stk.top().first)));
+                        [[maybe_unused]] std::vector<InitList> _2(
+                                std::move(*std::get_if<std::vector<InitList>>(&stk.top().first)));
                         stk.pop();
+//                        [[maybe_unused]] InitList _2(std::move(*std::get_if<InitList>(&stk.top().first)));
+//                        stk.pop();
                         [[maybe_unused]] Token _1(std::move(*std::get_if<Token>(&stk.top().first)));
                         stk.pop();
-                        __ = InitList(_2);
+                        __ = InitList{nullptr, std::move(_2)};
                         break;
                     }
                     case 14: {//  InitList  LBrc  RBrc
@@ -577,7 +581,6 @@ Program *parse() {
                         stk.pop();
                         [[maybe_unused]] Token _4(std::move(*std::get_if<Token>(&stk.top().first)));
                         stk.pop();
-
                         [[maybe_unused]] Token _3(std::move(*std::get_if<Token>(&stk.top().first)));
                         stk.pop();
                         [[maybe_unused]] Token _2(std::move(*std::get_if<Token>(&stk.top().first)));
@@ -1103,9 +1106,9 @@ Program *parse() {
     return nullptr;
 }
 
-int main() {
+int parse1() {
     FILE *pf = fopen(
-            "/home/supercb/mycode/CppProjects/CBcompiler/sysyruntimelibrary/section1/functional_test/94_matrix_mul.sy", "r");
+            "/home/supercb/mycode/CppProjects/CBcompiler/sysyruntimelibrary/section1/functional_test/00_arr_defn2.sy", "r");
     yyset_in(pf);
     yylex();
 //    std::cout<<ACTION[110][35].val;

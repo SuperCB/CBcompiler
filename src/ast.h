@@ -1,9 +1,6 @@
 //
 // Created by supercb on 22-6-20.
 //
-
-
-
 #pragma once
 
 #include <cstdint>
@@ -12,9 +9,19 @@
 #include <variant>
 #include <vector>
 
-class Decl;
 
+
+
+
+class Decl;
 class Func;
+class Expr;
+class Binary;
+class Stmt {
+
+};
+
+
 
 class Expr {
 public:
@@ -161,8 +168,6 @@ public:
 //    }
 };
 
-class Stmt {
-};
 
 class Assign : public Stmt {
 public:
@@ -259,7 +264,7 @@ public:
     Return(Expr *val_) : val(val_) {}
 };
 
-class Function;
+class IrFunc;
 
 class Func {
 public:
@@ -275,7 +280,7 @@ public:
             is_int(is_int_), name(name_), params(params_), body(body_) {}
 
     // ast->ir阶段赋值
-    Function *val;
+    IrFunc *val;
 
     // BUILTIN[8]是memset，这个下标在ssa.cpp会用到，修改时需要一并修改
     static Func BUILTIN[9];
@@ -287,6 +292,11 @@ class Program {
 public:
     // 我并不想用variant的，把函数和变量放在两个vector里更好，这样做是为了记录相对位置关系
     std::vector<std::variant<Func, Decl>> func_or_decl;
+
+    Program() {
+
+    }
+
 };
 
 
