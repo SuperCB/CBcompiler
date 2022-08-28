@@ -7,7 +7,7 @@
 #include <iostream>
 #include <cassert>
 #include "../ast.h"
-
+#include "../include/dbg.h"
 using uint = unsigned int;
 
 struct Act {
@@ -325,15 +325,14 @@ extern void yyset_in(FILE *_in_str);
 
 
 
-Program *parse() {
+Program parse() {
 
-    tokens.push_back({TokenType::Over, "$"});
 
     std::stack<uint> states;
     std::stack<std::pair<StackItem, uint>> stk;
     // push the initial state
+    tokens.push_back({TokenType::Over, "$"});
 
-    stk.push({Program{}, 0});
     stk.push({Program{}, 0});
 
     uint loc = 0;
@@ -346,7 +345,7 @@ Program *parse() {
         TokenType token_type = token.type;
         uint top = stk.top().second;
         Act act = ACTION[top][static_cast<uint>(token_type)];
-  std::cout<<top<<std::endl;
+//        std::cout<<top<<std::endl;
         switch (act.kind) {
             case Act::Shift: {
                 stk.push({token, act.val});
@@ -378,7 +377,7 @@ Program *parse() {
                         break;
                     }
                     case 3:{//  Program  Decl
-                        std::vector<Decl> _1(
+                       std::vector<Decl>_1 (
                                 std::move(*std::get_if<std::vector<Decl>>(&stk.top().first)));
                         stk.pop();
                         Program _2;
@@ -386,6 +385,8 @@ Program *parse() {
                         {
                             _2.func_or_decl.emplace_back(item);
                         }
+                        dbg("program decl");
+
                         __ = _2;
                         break;
                     }case 4:{//  Program  Func
@@ -452,7 +453,7 @@ Program *parse() {
                         break;
                     }
                     case 10: {//  Decl1  ID  ArrayDims
-                        [[maybe_unused]] std::vector<Expr *> _2(
+                          std::vector<Expr *> _2(
                                 std::move(*std::get_if<std::vector<Expr *>>(&stk.top().first)));
                         stk.pop();
                         Token _1(std::move(*std::get_if<Token>(&stk.top().first)));
@@ -574,6 +575,8 @@ Program *parse() {
                         [[maybe_unused]] Token _1(std::move(*std::get_if<Token>(&stk.top().first)));
                         stk.pop();
                         __ = Func(true, _2.val, {}, std::move(_5));
+                        dbg("func");
+
                         break;
                     }
                     case 21: {//  Func  Void  ID  LPar  RPar  Block
@@ -587,6 +590,7 @@ Program *parse() {
                         stk.pop();
                         [[maybe_unused]] Token _1(std::move(*std::get_if<Token>(&stk.top().first)));
                         stk.pop();
+                        dbg("func");
                         __ = Func(false, _2.val, {}, std::move(_5));
                         break;
                     }
@@ -609,7 +613,7 @@ Program *parse() {
                         [[maybe_unused]] Token _1(std::move(*std::get_if<Token>(&stk.top().first)));
                         stk.pop();
 
-                        __ = Block({});
+                        __ = Block();
                         break;
                     }
                     case 24: {//  ParamList  ParamList  Comma  Param
@@ -637,7 +641,7 @@ Program *parse() {
                         stk.pop();
                         [[maybe_unused]] Expr *_1(std::move(*std::get_if<Expr *>(&stk.top().first)));
                         stk.pop();
-                        __ = new Binary{Binary::Type::Add, _1, _3};
+                        __ = new Binary{OpType::Add, _1, _3};
                         break;
                     }
                     case 27: {//  Expr  Expr  Sub  Expr
@@ -647,7 +651,7 @@ Program *parse() {
                         stk.pop();
                         [[maybe_unused]] Expr *_1(std::move(*std::get_if<Expr *>(&stk.top().first)));
                         stk.pop();
-                        __ = new Binary{Binary::Type::Sub, _1, _3};
+                        __ = new Binary{OpType::Sub, _1, _3};
                         break;
                     }
                     case 28: {//  Expr  Expr  Mul  Expr
@@ -657,7 +661,7 @@ Program *parse() {
                         stk.pop();
                         [[maybe_unused]] Expr *_1(std::move(*std::get_if<Expr *>(&stk.top().first)));
                         stk.pop();
-                        __ = new Binary{Binary::Type::Mul, _1, _3};
+                        __ = new Binary{OpType::Mul, _1, _3};
                         break;
                     }
                     case 29: {//  Expr  Expr  Div  Expr
@@ -667,7 +671,7 @@ Program *parse() {
                         stk.pop();
                         [[maybe_unused]] Expr *_1(std::move(*std::get_if<Expr *>(&stk.top().first)));
                         stk.pop();
-                        __ = new Binary{Binary::Type::Div, _1, _3};
+                        __ = new Binary{OpType::Div, _1, _3};
                         break;
                     }
                     case 30: {//  Expr  Expr  Mod  Expr
@@ -677,7 +681,7 @@ Program *parse() {
                         stk.pop();
                         [[maybe_unused]] Expr *_1(std::move(*std::get_if<Expr *>(&stk.top().first)));
                         stk.pop();
-                        __ = new Binary{Binary::Type::Mod, _1, _3};
+                        __ = new Binary{OpType::Mod, _1, _3};
                         break;
                     }
                     case 31: {//  Expr  Expr  Lt  Expr
@@ -687,7 +691,7 @@ Program *parse() {
                         stk.pop();
                         [[maybe_unused]] Expr *_1(std::move(*std::get_if<Expr *>(&stk.top().first)));
                         stk.pop();
-                        __ = new Binary{Binary::Type::Lt, _1, _3};
+                        __ = new Binary{OpType::Lt, _1, _3};
                         break;
                     }
                     case 32: {//  Expr  Expr  Le  Expr
@@ -697,7 +701,7 @@ Program *parse() {
                         stk.pop();
                         [[maybe_unused]] Expr *_1(std::move(*std::get_if<Expr *>(&stk.top().first)));
                         stk.pop();
-                        __ = new Binary{Binary::Type::Le, _1, _3};
+                        __ = new Binary{OpType::Le, _1, _3};
                         break;
                     }
                     case 33: {//  Expr  Expr  Gt  Expr
@@ -707,7 +711,7 @@ Program *parse() {
                         stk.pop();
                         [[maybe_unused]] Expr *_1(std::move(*std::get_if<Expr *>(&stk.top().first)));
                         stk.pop();
-                        __ = new Binary{Binary::Type::Gt, _1, _3};
+                        __ = new Binary{OpType::Gt, _1, _3};
                         break;
                     }
                     case 34: {//  Expr  Expr  Ge  Expr
@@ -717,7 +721,7 @@ Program *parse() {
                         stk.pop();
                         [[maybe_unused]] Expr *_1(std::move(*std::get_if<Expr *>(&stk.top().first)));
                         stk.pop();
-                        __ = new Binary{Binary::Type::Ge, _1, _3};
+                        __ = new Binary{OpType::Ge, _1, _3};
                         break;
                     }
                     case 35: {//  Expr  Expr  Eq  Expr
@@ -727,7 +731,7 @@ Program *parse() {
                         stk.pop();
                         [[maybe_unused]] Expr *_1(std::move(*std::get_if<Expr *>(&stk.top().first)));
                         stk.pop();
-                        __ = new Binary{Binary::Type::Eq, _1, _3};
+                        __ = new Binary{OpType::Eq, _1, _3};
                         break;
                     }
                     case 36: {//  Expr  Expr  Ne  Expr
@@ -737,7 +741,7 @@ Program *parse() {
                         stk.pop();
                         [[maybe_unused]] Expr *_1(std::move(*std::get_if<Expr *>(&stk.top().first)));
                         stk.pop();
-                        __ = new Binary{Binary::Type::Ne, _1, _3};
+                        __ = new Binary{OpType::Ne, _1, _3};
                         break;
                     }
                     case 37: {//  Expr  Expr  And  Expr
@@ -747,7 +751,7 @@ Program *parse() {
                         stk.pop();
                         [[maybe_unused]] Expr *_1(std::move(*std::get_if<Expr *>(&stk.top().first)));
                         stk.pop();
-                        __ = new Binary{Binary::Type::And, _1, _3};
+                        __ = new Binary{OpType::And, _1, _3};
                         break;
                     }
                     case 38: {//  Expr  Expr  Or  Expr
@@ -757,7 +761,7 @@ Program *parse() {
                         stk.pop();
                         [[maybe_unused]] Expr *_1(std::move(*std::get_if<Expr *>(&stk.top().first)));
                         stk.pop();
-                        __ = new Binary{Binary::Type::Or, _1, _3};
+                        __ = new Binary{OpType::Or, _1, _3};
                         break;
                     }
                     case 39: {//  Expr  Add  Expr
@@ -773,7 +777,7 @@ Program *parse() {
                         stk.pop();
                         [[maybe_unused]] Token _1(std::move(*std::get_if<Token>(&stk.top().first)));
                         stk.pop();
-                        __ = new Binary(Binary::Type::Sub, IntConstant::ZERO, _2);
+                        __ = new Binary(OpType::Sub, IntConstant::getZero(), _2);
                         break;
                     }
                     case 41: {//  Expr  Not  Expr
@@ -781,7 +785,7 @@ Program *parse() {
                         stk.pop();
                         [[maybe_unused]] Token _1(std::move(*std::get_if<Token>(&stk.top().first)));
                         stk.pop();
-                        __ = new Binary(Binary::Type::Eq, IntConstant::ZERO, _2);
+                        __ = new Binary(OpType::Eq, IntConstant::getZero(), _2);
                         break;
                     }
                     case 42: {//  Expr  LPar  Expr  RPar
@@ -1093,27 +1097,29 @@ Program *parse() {
                 }
                 assert(stk.size());
                 auto nxstate = Goto[stk.top().second][expres2nonter[act.val]];
-                stk.push({std::move(__), nxstate});
+                stk.push({__, nxstate});
                 break;
             }
             case Act::Accept:
-                return std::get_if<Program>(&stk.top().first);
+//                std::cout << "fuck" << std::endl;
+               return std::move(*std::get_if<Program>(&stk.top().first));
+//                return std::get_if<Program>(&stk.top().first);
             case Act::Err:
                 std::cout << token.val<<std::endl;
-                return nullptr;
+                return {};
         }
     }
-    return nullptr;
+    return {};
 }
 
-int parse1() {
-    FILE *pf = fopen(
-            "/home/supercb/mycode/CppProjects/CBcompiler/sysyruntimelibrary/section1/functional_test/00_arr_defn2.sy", "r");
-    yyset_in(pf);
-    yylex();
-//    std::cout<<ACTION[110][35].val;
-    auto res = parse();
-    if (res == nullptr)
-        std::cout << "dsfa" << std::endl;
-    fclose(pf);
-}
+//int main() {
+//    FILE *pf = fopen(
+//            "/home/supercb/mycode/CppProjects/CBcompiler/sysyruntimelibrary/section1/functional_test/00_arr_defn2.sy", "r");
+//    yyset_in(pf);
+//    yylex();
+////    std::cout<<ACTION[110][35].expr;
+//    auto res = parse();
+//    if (res == nullptr)
+//        std::cout << "dsfa" << std::endl;
+//    fclose(pf);
+//}

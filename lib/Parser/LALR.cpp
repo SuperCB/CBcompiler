@@ -33,12 +33,14 @@ CBCompiler::LALR::LALR(YAML::Node yaml) : terminator_cnt(0), nonterminator_cnt(0
         auto content = *iter;
         auto lv = content["lval"].as<std::string>();
         expressions.insert({lv, {}});
+
+
         nonterminator2id[lv] = nonterminator_cnt++;
     }
 
     // second get all endtoken
-    ::uint expressionid = 0;
-
+    uint expressionid = 0;
+    uint unterminator_cnt = 1;
     for (auto iter = exprs.begin(); iter != exprs.end(); ++iter) {
 
 
@@ -48,20 +50,18 @@ CBCompiler::LALR::LALR(YAML::Node yaml) : terminator_cnt(0), nonterminator_cnt(0
 
         for (auto rvaliter = rvals.begin(); rvaliter != rvals.end(); ++rvaliter) {
             std::vector<LRToken> lrtokens;
-
+            std::string act = "//  " + exprescontent["lval"].as<std::string>();
             auto rvalcontent = *rvaliter;
-            for (auto exi = rvalcontent["val"].begin(); exi != rvalcontent["val"].end(); ++exi) {
+            for (auto exi = rvalcontent["expr"].begin(); exi != rvalcontent["expr"].end(); ++exi) {
+
                 auto little_expr = exi.operator*().as<std::string>();
-
-
                 LRType type_;
-
+                act += "  " + little_expr;
                 if (little_expr == "empty") {
                     type_ = LRType::EMPTY;
                 } else {
                     if (expressions.count(little_expr) == 0) {
                         type_ = LRType::END;
-                        dbg(little_expr);
                         ++terminator_cnt;
                     } else {
                         type_ = LRType::UNEND;
@@ -70,12 +70,16 @@ CBCompiler::LALR::LALR(YAML::Node yaml) : terminator_cnt(0), nonterminator_cnt(0
 
 
                 lrtokens.emplace_back(type_, little_expr);
-
-
             }
-            expression_action[++expressionid] = rvalcontent["act"].as<std::string>();
+
+            act += "\n";
+            expression_action[++expressionid] = act;
+
+
+            express_to_nonterminator[expressionid] = unterminator_cnt;
             expressions[exprescontent["lval"].as<std::string>()].push_back({std::move(lrtokens), expressionid});
         }
+        unterminator_cnt++;
     }
     GetLR0groups();
     GenerateLR1Groups();
@@ -109,7 +113,8 @@ void CBCompiler::LALR::GetLR0groups() {
             if (!flag) {
 
             } else {
-                if (lr0token.str == "empty")continue;
+
+
 
                 token2lr0item[lr0token.str].push_back(i);
             }
@@ -154,12 +159,12 @@ std::vector<CBCompiler::LRItem> CBCompiler::LALR::GetLR0Closure(const std::vecto
         itemsque.pop();
         LRToken token;
         bool flag = top.TokenAfterPos(token);
-        if (!flag) {
-            dbg("Accept ");
-        } else {
 
+
+        if (!flag) {
+//            dbg("Accept ");
+        } else {
             if (token.IsUnend()) {
-//                dbg("unend token", token.str);
                 for (auto &expres: expressions[token.str]) {
                     LRItem tlr0item{token.str, expres.expression, 0, expres.id};
                     if (!lr0items.find(tlr0item)) {
@@ -167,11 +172,35 @@ std::vector<CBCompiler::LRItem> CBCompiler::LALR::GetLR0Closure(const std::vecto
                         lr0items.push_back(tlr0item);
                     }
                 }
+
+
+                auto firsts = GetFirst(token);
+                if (firsts.count("empty") == 1) {
+
+
+                    bool flag2 = top.TokenTwoAfterPos(token);
+                    if (flag2) {
+                        LRItem tlr0item1 = top;
+
+
+                        tlr0item1.PointLocAdd();
+                        dbg("fads");
+                        itemsque.push(tlr0item1);
+                        lr0items.push_back(tlr0item1);
+//                        for (auto &expres: expressions[token.str]) {
+//                            LRItem tlr0item{token.str, expres.expression, 0, expres.id};
+//                            if (!lr0items.find(tlr0item)) {
+//                                itemsque.push(tlr0item);
+//                                lr0items.push_back(tlr0item);
+//                            }
+//                        }
+                    }
+                }
+
             } else {
                 continue;
             }
         }
-
     }
     return lr0items.items;
 }
@@ -373,6 +402,8 @@ void CBCompiler::LALR::GenerateLR1Groups() {
         for (auto &core_item: top->core_items) {
             if (core_item.temp.empty())continue;
             auto lr_closure = GetLR1Closure(core_item);
+
+            bool transto_is_same_ = false;
             for (auto &closure_item: lr_closure) {
                 LRToken token;
                 bool flag = closure_item.TokenAfterPos(token);
@@ -387,10 +418,16 @@ void CBCompiler::LALR::GenerateLR1Groups() {
                 bool f = trans_group->AddNewLookForwardToken(closure_item);
                 if (f) {
                     que.push(trans_to_id);
+
+                    if (trans_to_id == top->id) {
+                        transto_is_same_ = true;
+                    }
                 }
+
             }
             core_item.look_forward.insert(core_item.temp.begin(), core_item.temp.end());
-            core_item.temp.clear();
+            if (!transto_is_same_)
+                core_item.temp.clear();
         }
 
     }
@@ -412,49 +449,28 @@ std::vector<CBCompiler::LRItem> CBCompiler::LALR::GetLR1Closure(const LRItem &co
         if (!flag) {
         } else {
             if (token.IsUnend()) {
+                for (auto &expressinfo: expressions[token.str]) {
+                    LRToken token2;
+                    bool flag = top.TokenTwoAfterPos(token2);
+                    std::vector<LRToken> belta_a;
+                    std::set<std::string> look_forward;
+                    if (flag) {
+                        //if twoafterpos exists
+                        auto first_set = GetFirst(token2);
+                        look_forward.insert(first_set.begin(), first_set.end());
+                    } else {
+                        // expressinfo
+                        look_forward = top.look_forward;
+                    }
 
-                for (auto look_forward_token: top.look_forward) {
+                    LRItem belta_item{token.str, expressinfo.expression, 0, expressinfo.id};
 
-
-                    for (auto &expressinfo: expressions[token.str]) {
-                        LRToken token2;
-
-                        bool flag = top.TokenTwoAfterPos(token2);
-
-
-                        std::vector<LRToken> belta_a;
-                        std::set<std::string> look_forward;
-                        if (flag) {
-                            //if twoafterpos exists
-
-
-                            std::vector<LRToken> beta_alpha;
-                            beta_alpha.push_back(token2);
-                            beta_alpha.push_back({LRType::END, look_forward_token});
-                            auto first_set = GetFirst(beta_alpha);
-
-                            for (auto &tok: first_set) {
-                                if (tok != "empty") {
-                                    look_forward.insert(tok);
-                                }
-                            }
-
-
-                        } else {
-                            // expressinfo
-                            look_forward = top.look_forward;
-                        }
-
-                        LRItem belta_item{token.str, expressinfo.expression, 0, expressinfo.id};
-
-                        belta_item.look_forward = look_forward;
-                        if (!lr1_items.find(belta_item)) {
-                            itemsque.push(belta_item);
-                            lr1_items.push_back(belta_item);
-                        }
+                    belta_item.look_forward = look_forward;
+                    if (!lr1_items.find(belta_item)) {
+                        itemsque.push(belta_item);
+                        lr1_items.push_back(belta_item);
                     }
                 }
-
             } else {
                 continue;
             }
@@ -479,8 +495,18 @@ void CBCompiler::LALR::GenerateParseChart(std::ofstream &out, std::map<std::stri
     assert(groups.size() >= 1);
 
 //
+    DrawLR("lrgraph.dot", true);
     DrawLALR("graph.dot");
 
+
+    out << "uint expres2nonter[]={0,";
+
+    for (auto &[k, v]: express_to_nonterminator) {
+        out << v << ",";
+    }
+    out << "}";
+
+    out << std::endl;
 
     terminator2id["$"] = terminator2id.size();
 
@@ -489,6 +515,8 @@ void CBCompiler::LALR::GenerateParseChart(std::ofstream &out, std::map<std::stri
     std::vector<std::vector<CBCompiler::ActionItem>> actions(row, std::vector<CBCompiler::ActionItem>(col,
                                                                                                       {CBCompiler::ActionItemType::Err,
                                                                                                        0}));
+
+
     std::vector<std::vector<uint>> gotos(row, std::vector<uint>(nonterminator_cnt, 0));
 // 所有goto表中的内容以及action表中关于shift的内容都在trans_graph
     for (auto &edge: trans_graph) {
@@ -501,7 +529,7 @@ void CBCompiler::LALR::GenerateParseChart(std::ofstream &out, std::map<std::stri
             uint col_loc = terminator2id[tokenstr];
             uint val = to;
             actions[row_loc][col_loc].type = CBCompiler::ActionItemType::Shift;
-            actions[row_loc][col_loc].val = val;
+            actions[row_loc][col_loc].expr = val;
         } else {
             //如果是非终结符就是goto表中的操作
             uint row_loc = from;
@@ -509,38 +537,49 @@ void CBCompiler::LALR::GenerateParseChart(std::ofstream &out, std::map<std::stri
             uint val = to;
             gotos[row_loc][col_loc] = val;
         }
+
+
     }
+
 
     for (auto &lr_group: groups) {
         for (auto &core_item: lr_group->core_items) {
-
             LRToken token;
-            bool flag = core_item.TokenAfterPos(token);
-            bool empty = false;
-            if (flag) {
+
+
+            bool over = core_item.IsOver();
+            bool empty = true;
+            if (core_item.ploc == core_item.rexprs.size() - 1) {
                 auto result = GetFirst(token);
                 if (result.count("empty")) {
                     empty = true;
+
                 }
             }
-            if (!flag || empty) {
+
+            if (over) {
                 for (auto &look_forward: core_item.look_forward) {
                     uint row_loc = lr_group->id;
+
+                    if (core_item.lv == "Block") {
+                        dbg(core_item.look_forward);
+                        dbg(core_item.ploc);
+                        dbg(lr_group->id);
+                    }
                     uint col_loc = terminator2id[look_forward];
-                    dbg(look_forward);
                     uint val = core_item.expression_id;
-                    if (val == ACCEPT_EXPR_ID) {
-                        dbg("fdasfad");
+
+
+                    if (val == ACCEPT_ID) {
                         actions[row_loc][col_loc].type = CBCompiler::ActionItemType::Accept;
-                        actions[row_loc][col_loc].val = ACCEPT_EXPR_ID;
+                        actions[row_loc][col_loc].expr = ACCEPT_ID;
                     } else {
                         if (ComPriority(core_item, look_forward)) {
                             actions[row_loc][col_loc].type = CBCompiler::ActionItemType::Reduce;
-                            actions[row_loc][col_loc].val = val;
+                            actions[row_loc][col_loc].expr = val;
                         }
                     }
                 }
-
             }
         }
     }
@@ -555,17 +594,18 @@ void CBCompiler::LALR::GenerateParseChart(std::ofstream &out, std::map<std::stri
         out << "{";
         for (uint j = 0; j < actions[i].size(); ++j) {
             out << "{";
-//            Act::Err, 0
             std::string str;
             switch (actions[i][j].type) {
+
+
                 case ActionItemType::Accept:
                     str = "Act::Accept,0";
                     break;
                 case ActionItemType::Shift:
-                    str = string_format("Act::Shift,%d", actions[i][j].val);
+                    str = string_format("Act::Shift,%d", actions[i][j].expr);
                     break;
                 case ActionItemType::Reduce:
-                    str = string_format("Act::Reduce,%d", actions[i][j].val);
+                    str = string_format("Act::Reduce,%d", actions[i][j].expr);
                     break;
                 case ActionItemType::Err:
                     str = "Act::Err,0";
@@ -573,6 +613,7 @@ void CBCompiler::LALR::GenerateParseChart(std::ofstream &out, std::map<std::stri
                 default:
                     assert(true);
                     break;
+
             }
             out << str;
             out << "}";
@@ -586,9 +627,9 @@ void CBCompiler::LALR::GenerateParseChart(std::ofstream &out, std::map<std::stri
     out << std::endl;
 
     //生成GOTO表
-    out << string_format("const static uint Goto [%u][%u]={", row, nonterminator_cnt);
+    out << string_format("const static uint Goto [%u][%u]={", row, nonterminator_cnt + 1);
     for (uint i = 0; i < gotos.size(); ++i) {
-        out << "{";
+        out << "{ 0,";
         for (uint j = 0; j < gotos[i].size(); ++j) {
             out << string_format("%u", gotos[i][j]);
             if (j != gotos[i].size() - 1) {
@@ -608,14 +649,14 @@ void CBCompiler::LALR::GenerateParseChart(std::ofstream &out, std::map<std::stri
     Act act = ACTION[state][token.kind];
     switch (act.kind) {
       case Act::Shift: {
-        stk.emplace_back(token, act.val);
-        state = act.val;
+        stk.emplace_back(token, act.expr);
+        state = act.expr;
         token = lexer.next();
         break;
       }
       case Act::Reduce: {
         StackItem __;)";
-    out << "switch(act.val){";
+    out << "switch(act.expr){";
 
     for (auto [k, v]: expression_action) {
         out << string_format("case %d:{", k);
@@ -663,7 +704,7 @@ void CBCompiler::LALR::DrawLALR(std::string outf) {
                 if (ComPriority(core_item, look)) {
                     out << look << " ";
                     if (core_item.IsOver()) {
-                        RemoveDuplicateTrans(lr_group->id, look);
+                //        RemoveDuplicateTrans(lr_group->id, look);
                     }
                 }
             }
@@ -684,7 +725,6 @@ void CBCompiler::LALR::DrawLALR(std::string outf) {
 //去除二义性，去除二义性并不发生在LALR表的构造过程中，而是发生在LALR表构造完成后
 bool CBCompiler::LALR::ComPriority(CBCompiler::LRItem &lrItem, const std::string &look) {
 
-    dbg(look);
     std::string l_op;
     if (!lrItem.GetStrBeforeLoc(l_op)) {
         return true;

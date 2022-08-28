@@ -2,8 +2,8 @@
 // Created by supercb on 22-6-3.
 //
 #include "gtest/gtest.h"
-#include "../src/Regex2Dfa/CFlex.h"
-#include "../src/Parser/LALR.h"
+#include "../lib/Regex2Dfa/CFlex.h"
+#include "../lib/Parser/LALR.h"
 #include <iostream>
 #include <yaml-cpp/yaml.h>
 TEST(LR1Testwithclosure, test1) {

@@ -1,0 +1,87 @@
+# 如果觉得好用，请收藏或则分享本站
+
+cblex:
+
+  - val: '\\+'
+    name: Add
+
+  - val: '\\*'
+    name: Mul
+
+
+  - val : 'asd'
+    name : id
+
+
+
+cbsion:
+  root: S
+  exprs:
+
+
+
+    - lval: S
+      rval:
+        - val:
+            - L
+            - Eq
+            - R
+          act: |
+            // Block LBrc StmtList RBrc
+        - val:
+            - R
+          act: |
+            // Block LBrc StmtList RBrc
+
+
+
+    - lval: L
+      rval:
+        - val:
+            - Mul
+            - R
+          act: |
+            //Stmt Decl
+
+        - val:
+            - ID
+          act: |
+            //Stmt Block
+
+
+    - lval: R
+      rval:
+        - val:
+            - L
+          act: |
+            // StmtList StmtList', 'Stmt
+  
+  
+  
+
+  priority:
+    - tokens:
+        - Or
+      level: 1
+    - tokens:
+        - And
+      level: 2
+    - tokens:
+        - Eq
+        - Ne
+      level: 3
+    - tokens:
+        - Lt
+        - Le
+        - Ge
+        - Gt
+      level: 4
+    - tokens:
+        - Add
+        - Sub
+      level: 5
+    - tokens:
+        - Mul
+        - Div
+        - Mod
+      level: 6

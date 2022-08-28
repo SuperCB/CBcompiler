@@ -434,7 +434,7 @@ namespace CBCompiler {
 
     inline void CFlex::AddLar0Item(int loc, TOKENTYPE token, ChartItem item) {
         ACTIONS[loc][TokenId(token)].act = item.act;
-        ACTIONS[loc][TokenId(token)].val = item.val;
+        ACTIONS[loc][TokenId(token)].expr = item.val;
     }
 
     inline void CFlex::AddGotoItem(int loc, TOKENTYPE token, unsigned int state) {

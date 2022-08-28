@@ -17,7 +17,7 @@
 
 #include <yaml-cpp/yaml.h>
 
-#define ACCEPT_EXPR_ID 0
+#define ACCEPT_ID 0
 
 namespace CBCompiler {
 
@@ -63,7 +63,8 @@ namespace CBCompiler {
 
 
         std::set<std::string> GetFirst(const LRToken &token);
-        std::set<std::string> GetFirst( std::vector<LRToken> &tokens);
+
+        std::set<std::string> GetFirst(std::vector<LRToken> &tokens);
 
     private:
         std::vector<LRItem> GetLR0Closure(const std::vector<LRItem> &coreitems);
@@ -72,7 +73,7 @@ namespace CBCompiler {
 
         void GetLR0groups();
 
-        void RemoveDuplicateTrans(uint group_id,std::string str);
+        void RemoveDuplicateTrans(uint group_id, std::string str);
 
         bool ComPriority(LRItem &lrItem, const std::string &look);
 
@@ -81,7 +82,8 @@ namespace CBCompiler {
 
         void GenerateLR1Groups();
 
-
+        //为了解决从一个产生式到终结符的对应问题,这确实是当时设计软件时的重大失误
+        std::map<uint, uint> express_to_nonterminator;
 
         std::vector<LRItem> GetLR1Closure(const LRItem &core_item);
 
@@ -93,7 +95,7 @@ namespace CBCompiler {
         std::unordered_map<std::string, std::vector<ExpressionInfor>> expressions;
 
         //记录每一个表达式对应的动作
-        std::unordered_map<::uint, std::string> expression_action;
+        std::map<::uint, std::string> expression_action;
 
         std::vector<std::tuple<uint, uint, LRToken>> trans_graph;
 

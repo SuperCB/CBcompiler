@@ -1,7 +1,37 @@
 # 如果觉得好用，请收藏或则分享本站
+
+cblex:
+
+  - val: '\\+'
+    name: Add
+
+  - val: '\\*'
+    name: Mul
+
+  - val: '\\('
+    name: LPar
+  - val: '\\)'
+    name: RPar
+
+  - val : 'asd'
+    name : id
+
+
+
 cbsion:
-  root: E
+  root: Ex
   exprs:
+    - lval : Ex
+      rval :
+        - val :
+            - E
+          act : |
+            fasd
+        - val :
+            - empty
+          act : |
+            fsdaf
+
     - lval: E
       rval:
         - val:
@@ -11,7 +41,7 @@ cbsion:
     - lval : Ep
       rval :
         - val :
-            - add
+            - Add
             - T
             - Ep
           act : fd
@@ -27,7 +57,7 @@ cbsion:
     - lval : Tp
       rval :
         - val :
-            - mul
+            - Mul
             - F
             - Tp
           act : fad
@@ -37,9 +67,9 @@ cbsion:
     - lval : F
       rval :
         - val :
-            - Lpar
+            - LPar
             - E
-            - Rpar
+            - RPar
           act : fdas
         - val :
             - id

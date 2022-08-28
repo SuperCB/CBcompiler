@@ -8,37 +8,27 @@ include_directories(${INCLUDE_DIR})
 
 include_directories(yaml-cpp/yaml-cpp/include)
 
-# gmock gtest https://crascit.com/2015/07/25/cmake-gtest/
-configure_file("${PROJECT_SOURCE_DIR}/gtest_CMakeLists.txt.in" googletest-download/CMakeLists.txt)
 
-
-execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/googletest-download")
-execute_process(COMMAND "${CMAKE_COMMAND}" --build .
-        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/googletest-download")
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)  # don't override our compiler/linker options when building gtest
-add_subdirectory("${CMAKE_BINARY_DIR}/googletest-src" "${CMAKE_BINARY_DIR}/googletest-build")
+
 
 add_subdirectory(test)
 
 
-file(GLOB_RECURSE CBlibrary_source ${PROJECT_SOURCE_DIR}/src/*/*.cpp ${PROJECT_SOURCE_DIR}/src/*/*.h)
+add_subdirectory(src)
+file(GLOB_RECURSE CBlibrary_source ${PROJECT_SOURCE_DIR}/lib/*/*.cpp ${PROJECT_SOURCE_DIR}/lib/*/*.h)
 
 
 add_subdirectory(yaml-cpp/yaml-cpp)
-
 
 add_library(CBlibrary
         STATIC
         ${CBlibrary_source}
         )
 
-add_executable(CBcompiler main.cpp src/JsonReader/JsonReader.cpp src/JsonReader/JsonReader.h)
+add_executable(CBcompiler main.cpp )
 
 target_link_libraries(CBcompiler CBlibrary yaml-cpp)
-
-
-
 
 
 include(ExternalProject)
@@ -52,3 +42,5 @@ ExternalProject_Add(googletest
         INSTALL_COMMAND ""
         TEST_COMMAND ""
         )
+
+add_subdirectory("${CMAKE_BINARY_DIR}/googletest-src" "${CMAKE_BINARY_DIR}/googletest-build")

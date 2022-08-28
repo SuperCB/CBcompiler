@@ -13,7 +13,7 @@ CompilerFrontGenerater::CompilerFrontGenerater(std::string addr) : token_cnt(0) 
     for (auto iter = cflex.begin(); iter != cflex.end(); ++iter) {
         auto con = *iter;
 
-        val2id[con["val"].as<std::string>()] = token_cnt;
+        val2id[con["expr"].as<std::string>()] = token_cnt;
         name2id[con["name"].as<std::string>()] = token_cnt;
         token_cnt++;
     }
@@ -50,7 +50,7 @@ void CompilerFrontGenerater::Generate() {
           enum : uint {
           Shift, Reduce, Accept, Err
         } kind;
-    uint val;
+    uint expr;
     };)";
 
     out << std::endl;
@@ -62,15 +62,6 @@ void CompilerFrontGenerater::Generate() {
     out << string_format("Over=%u,\n", name2id.size() + 1);
     out << "};\n";
 
-    out << "std::vector<std::pair<CBCompiler::CFlex, int> > tokens{";
-    for (auto [k, v]: val2id) {
-        out << "{";
-        out << string_format("CBCompiler::CFlex(\"%s\")", k.c_str());
-        out << ",";
-        out << v;
-        out << "},\n";
-    }
-    out << "};";
 
     lalr->GenerateParseChart(out, name2id);
     out.close();

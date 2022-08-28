@@ -2,8 +2,7 @@
 // Created by supercb on 22-5-24.
 //
 #include "gtest/gtest.h"
-#include "../src/Regex2Dfa/CFlex.h"
-#include "../src/Parser/LALR.h"
+#include "../lib/Regex2Dfa/CFlex.h"
 
 TEST(Regex2DFATest, test1) {
     CBCompiler::CFlex regex2Dfa("\\d+");

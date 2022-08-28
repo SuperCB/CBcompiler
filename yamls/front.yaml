@@ -78,12 +78,22 @@ cbsion:
             - Program
             - Decl
           act: |
-            fasdf
+            // Program  Program Decl
         - val:
             - Program
             - Func
           act: |
-            fasd adf 
+            // Program Program Func
+        - val:
+            - Decl
+          act: |
+            // Program  Program Decl
+        - val:
+            - Func
+          act: |
+            // Program Program Func
+        
+            
 
     - lval: Decl
       rval:
@@ -93,13 +103,13 @@ cbsion:
             - DeclList
             - Semi
           act: |
-            dfas
+            // Decl Const Int DeclList Semi
         - val:
             - Int
             - DeclList
             - Semi
           act: |
-            dfas 
+            // Decl Int DeclList Semi
 
 
 
@@ -107,24 +117,17 @@ cbsion:
     - lval: DeclList
       rval:
         - val:
-            - DeclList1
-          act: |
-            fasd 
-
-
-
-    - lval: DeclList1
-      rval:
-        - val:
-            - DeclList1
+            - DeclList
             - Comma
             - Decl1
           act: |
-            fas
+            // DeclList DeclList1
         - val:
             - Decl1
           act: |
-            fasdf 
+            // DeclList Decl1
+
+
 
     - lval: Decl1
       rval:
@@ -134,12 +137,22 @@ cbsion:
             - Assign
             - InitList
           act: |
-            dfas
+              // Decl1 ID ArrayDims Assign InitList
         - val:
             - ID
             - ArrayDims
           act: |
-            fads
+              // Decl1 ID ArrayDims
+        - val:
+            - ID
+            - Assign
+            - InitList
+          act: |
+              // Decl1 ID ArrayDims Assign InitList
+        - val:
+            - ID
+          act: |
+              // Decl1 ID ArrayDims
 
     - lval: InitList
       rval:
@@ -148,16 +161,18 @@ cbsion:
             - InitList1
             - RBrc
           act: |
-            dfas
+              // InitList LBrc InitList1 RBrc
         - val:
             - LBrc
             - RBrc
           act: |
-            dasfa
+              //  InitList LBrc RBrc
         - val:
             - Expr
           act: |
-            fadsf
+              //  InitList Expr
+
+
     - lval: InitList1
       rval:
         - val:
@@ -165,316 +180,11 @@ cbsion:
             - Comma
             - InitList
           act: |
-            fads
+              // InitList1 InitList1 Comma InitList
         - val:
             - InitList
           act: |
-            fasdf 
-
-
-
-    - lval: Expr
-      rval:
-        - val:
-            - Expr
-            - Add
-            - Expr
-          act: |
-            gfsd sfdgs sdfg
-            dfa sd
-        - val:
-            - Expr
-            - Sub
-            - Expr
-          act: ' ["E", "mul", "E"]'
-
-        - val:
-            - Expr
-            - Mul
-            - Expr
-          act: '["L", "E", "R"]'
-
-        - val:
-            - Expr
-            - Div
-            - Expr
-          act: '[id]'
-
-        - val:
-            - Expr
-            - Mod
-            - Expr
-          act: |
-            fdsa
-
-        - val:
-            - Expr
-            - Lt
-            - Expr
-          act: |
-            dfas
-
-        - val:
-            - Expr
-            - Le
-            - Expr
-          act: |
-            dfas
-
-        - val:
-            - Expr
-            - Gt
-            - Expr
-          act: |
-            dfas
-
-        - val:
-            - Expr
-            - Ge
-            - Expr
-          act: |
-            dfas
-
-        - val:
-            - Expr
-            - Eq
-            - Expr
-          act: |
-            dfas
-
-        - val:
-            - Expr
-            - Ne
-            - Expr
-          act: |
-            dfas      
-
-        - val:
-            - Expr
-            - And
-            - Expr
-          act: |
-            dfas
-
-        - val:
-            - Expr
-            - Or
-            - Expr
-          act: |
-            dfas
-        - val:
-            - Add
-            - Expr
-          act: |
-            dfas
-
-        - val:
-            - Sub
-            - Expr
-          act: |
-            dfas
-
-        - val:
-            - Not
-            - Expr
-          act: |
-            dfas
-
-        - val:
-            - LPar
-            - Expr
-            - RPar
-          act: |
-            dfa
-
-        #这是函数调用
-        - val:
-            - ID
-            - LPar
-            - ExprList
-            - RPar
-          act: |
-            dsaf 
-
-        - val:
-            - ID
-            - ArrayDims
-          act: |
-            dsfa
-        - val:
-            - IntConst
-          act: |
-            adfasdf
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    - lval: BasicBlock
-      rval:
-        - val:
-            - LBrc
-            - StmtList
-            - RBrc
-          act: |
-            adsf
-    
-
-    - lval : ParamList
-      rval :
-        - val :
-            - ParamList1
-          act : |
-            fdsa
-
-    - lval : ParamList1
-      rval :
-        - val :
-            - ParamList1
-            - Comma
-            - Param
-          act : |
-            afsdf
-        - val :
-            - Param
-          act : |
-            asdf
-
-    - lval : Param
-      rval :
-        - val :
-            - Int
-            - ID
-            - FunArrayDims
-          act : |
-            afds
-        - val :
-            - Int
-            - ID
-          act : |
-            adsf
-
-    - lval : Stmt
-      rval :
-        - val :
-            - ID
-            - ArrayDims
-            - Assign
-            - Expr
-            - Semi
-          act : |
-            sdaf
-        - val :
-            - Expr
-            - Semi
-          act : |
-            dasf
-        - val :
-            - Semi
-          act : |
-            fasd
-        - val :
-            - Decl
-          act : |
-            das
-        - val :
-            BasicBlock
-          act : |
-            fdsa
-        - val :
-            - If
-            - LPar
-            - Expr
-            - RPar
-            - Stmt
-            - ELse0
-          act : |
-            dfsa
-        - val :
-            - While
-            - LPar
-            - Expr
-            - RPar
-            - Stmt
-          act : |
-            fdsa
-        - val :
-            - Break
-            - Semi
-          act : |
-            dsfa
-        - val :
-            - Continue
-            - Semi
-          act : |
-            fdas
-        - val :
-            - Return
-            - Expr
-            - Semi
-          act : |
-            afds
-        - val :
-            - Return
-            - Semi
-          act : |
-            dsafs
-    
-    
-    
-
-    - lval : StmtList
-      rval :
-        - val :
-            - StmtList
-            - Stmt
-          act : |
-             adfs
-
-    - lval : Else0
-      rval :
-        - val :
-            - Else
-            - Stmt
-          act : |
-            fads
-        
-
-    - lval : ExprList
-      rval :
-        - val :
-            - ExprList1
-          act : |
-            adsf
-
-    - lval : ExprList1
-      rval :
-        - val :
-            - ExprList1
-            - Comma
-            - Expr
-          act : |
-            dasf
-        - val :
-            - Expr
-          act : |
-             fdas
+              //InitList1   InitList 
 
     - lval: Func
       rval:
@@ -484,9 +194,9 @@ cbsion:
             - LPar
             - ParamList
             - RPar
-            - BasicBlock
+            - Block
           act: |
-            fdas
+             //Func Int', 'Ident', 'LPar', 'ParamList', 'RPar', 'Block'
 
         - val:
             - Void
@@ -494,21 +204,345 @@ cbsion:
             - LPar
             - ParamList
             - RPar
-            - BasicBlock
+            - Block
           act: |
-            fdas
+              // Func 'Void', 'Ident', 'LPar', 'ParamList', 'RPar', 'Block'
+        - val:
+            - Int
+            - ID
+            - LPar
+            - RPar
+            - Block
+          act: |
+              //Func Int', 'Ident', 'LPar', 'ParamList', 'RPar', 'Block'
+
+        - val:
+            - Void
+            - ID
+            - LPar
+            - RPar
+            - Block
+          act: |
+              // Func 'Void', 'Ident', 'LPar', 'ParamList', 'RPar', 'Block'
+
+    - lval: Block
+      rval:
+        - val:
+            - LBrc
+            - StmtList
+            - RBrc
+          act: |
+              // Block LBrc StmtList RBrc
+        - val:
+            - LBrc
+            - RBrc
+          act: |
+              // Block LBrc StmtList RBrc    
+
+
+    
+
+    - lval: ParamList
+      rval:
+        - val:
+            - ParamList
+            - Comma
+            - Param
+          act: |
+            //ParamList1 ParamList1', 'Comma 'Param
+
+        - val:
+            - Param
+          act: |
+            //ParamList1 Param
+
+    - lval: Expr
+      rval:
+        - val:
+            - Expr
+            - Add
+            - Expr
+          act: |
+            //   Expr Expr Add Expr
+        - val:
+            - Expr
+            - Sub
+            - Expr
+          act: |
+            //   Expr Expr Sub Expr
+
+        - val:
+            - Expr
+            - Mul
+            - Expr
+          act: |
+            //Expr Mul Expr
+
+        - val:
+            - Expr
+            - Div
+            - Expr
+          act: |
+            //   Expr Expr Div Expr
+
+        - val:
+            - Expr
+            - Mod
+            - Expr
+          act: |
+            //   Expr Expr Mod Expr
+
+        - val:
+            - Expr
+            - Lt
+            - Expr
+          act: |
+            //   Expr Expr Lt Expr
+
+        - val:
+            - Expr
+            - Le
+            - Expr
+          act: |
+            //   Expr Expr Le Expr
+
+        - val:
+            - Expr
+            - Gt
+            - Expr
+          act: |
+            //   Expr Expr Gt Expr
+
+        - val:
+            - Expr
+            - Ge
+            - Expr
+          act: |
+            //   Expr Expr Ge Expr
+
+        - val:
+            - Expr
+            - Eq
+            - Expr
+          act: |
+            //   Expr Expr Eq Expr
+
+        - val:
+            - Expr
+            - Ne
+            - Expr
+          act: |
+            //   Expr Expr Ne Expr
+
+        - val:
+            - Expr
+            - And
+            - Expr
+          act: |
+            //   Expr Expr And Expr
+
+        - val:
+            - Expr
+            - Or
+            - Expr
+          act: |
+            ////   Expr Expr Or Expr
+        - val:
+            - Add
+            - Expr
+          act: |
+            //   Expr  Add Expr
+
+        - val:
+            - Sub
+            - Expr
+          act: |
+            //   Expr  Sub Expr
+
+        - val:
+            - Not
+            - Expr
+          act: |
+            //   Expr  Not Expr
+
+        - val:
+            - LPar
+            - Expr
+            - RPar
+          act: |
+            // Expr  LPar Expr RPar
+
+        #这是函数调用
+        - val:
+            - ID
+            - LPar
+            - ExprList
+            - RPar
+          act: |
+            // Expr Ident LPar ExprList RPar
+        - val:
+            - ID
+            - LPar
+            - RPar
+          act: |
+            // Expr Ident LPar ExprList RPar
+
+        - val:
+            - ID
+            - ArrayDims
+          act: |
+            //Expr ID ArrayDims
+        - val:
+            - ID
+          act: |
+            // Expr  IntConst            
+        
+
+        - val:
+            - IntConst
+          act: |
+            // Expr  IntConst
+     
+
+
+
+    - lval: Param
+      rval:
+        - val:
+            - Int
+            - ID
+            - FunArrayDims
+          act: |
+            // Param Int ID FunArrayDims
+        - val:
+            - Int
+            - ID
+          act: |
+            // Param Int ID
+
+    - lval: Stmt
+      rval:
+        - val:
+            - ID
+            - ArrayDims
+            - Assign
+            - Expr
+            - Semi
+          act: |
+               //Stmt    Ident', 'ArrayDims', 'Assign', 'Expr', 'Semi'
+
+        - val:
+            - ID
+            - Assign
+            - Expr
+            - Semi
+          act: |
+                //Stmt    Ident', 'ArrayDims', 'Assign', 'Expr', 'Semi'
+            
+
+        - val:
+            - Expr
+            - Semi
+          act: |
+            //Stmt Expr', 'Semi'
+        - val:
+            - Semi
+          act: |
+            //Stmt Semi
+
+        - val:
+            - Decl
+          act: |
+            //Stmt Decl
+
+        - val:
+            - Block
+          act: |
+            //Stmt Block
+
+        - val:
+            - If
+            - LPar
+            - Expr
+            - RPar
+            - Stmt
+          act: |
+              //Stmt 'If', 'LPar', 'Expr', 'RPar', 'Stmt', 'Else0'
+
+        - val:
+            - If
+            - LPar
+            - Expr
+            - RPar
+            - Stmt
+            - Else
+            - Stmt
+          act: |
+            //Stmt 'If', 'LPar', 'Expr', 'RPar', 'Stmt', 'Else0'
+        - val:
+            - While
+            - LPar
+            - Expr
+            - RPar
+            - Stmt
+          act: |
+            //Stmt While', 'LPar', 'Expr', 'RPar', 'Stmt'
+        - val:
+            - Break
+            - Semi
+          act: |
+            //Stmt Break', 'Semi'
+        - val:
+            - Continue
+            - Semi
+          act: |
+            //Stmt Continue', 'Semi
+        - val:
+            - Return
+            - Expr
+            - Semi
+          act: |
+            //stmt  Return', 'Expr', 'Semi'
+        - val:
+            - Return
+            - Semi
+          act: |
+            //stmt return semi
 
 
 
 
 
+    - lval: StmtList
+      rval:
+        - val:
+            - StmtList
+            - Stmt
+          act: |
+            // StmtList StmtList
+        - val :
+            - Stmt
+          act : |
+              // fadsf 
+      
+    
 
 
 
 
 
-
-
+    - lval: ExprList
+      rval:
+        - val:
+            - ExprList
+            - Comma
+            - Expr
+          act: |
+            // ExprList1 ExprList1', 'Comma', 'Expr'
+        - val:
+            - Expr
+          act: |
+            //ExprList1 Expr
 
 
 
@@ -522,12 +556,12 @@ cbsion:
             - Expr
             - RBrk
           act: |
-            fas
+            // FunArrayDims LBrk Expr RBrk
         - val:
             - LBrk
             - RBrk
           act: |
-            fsdaf
+            //  FunArrayDims  LBrk', 'RBrk
 
     - lval: ArrayDims
       rval:
@@ -537,8 +571,14 @@ cbsion:
             - Expr
             - RBrk
           act: |
-            fsadfasdf
-  
+            //ArrayDims   ArrayDims', 'LBrk', 'Expr', 'RBrk'
+        - val :
+            - LBrk
+            - Expr
+            - RBrk
+          act : |
+            // fdsaf 
+       
 
   priority:
     - tokens:

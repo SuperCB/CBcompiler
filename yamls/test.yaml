@@ -1,0 +1,123 @@
+# 如果觉得好用，请收藏或则分享本站
+
+cblex:
+
+  - val: '\\+'
+    name: Add
+
+  - val: '\\*'
+    name: Mul
+
+
+  - val : 'asd'
+    name : id
+
+
+
+cbsion:
+  root: Block
+  exprs:
+
+    
+
+    - lval: Block
+      rval:
+        - val:
+            - LBrc
+            - RBrc
+          act: |
+            // Block LBrc StmtList RBrc
+        - val:
+            - LBrc
+            - StmtList
+            - RBrc
+          act: |
+            // Block LBrc StmtList RBrc
+
+            
+
+    - lval: Stmt
+      rval:
+        - val:
+            - Block
+          act: |
+            //Stmt Block
+
+        - val:
+            - If
+            - LPar
+            - Expr
+            - RPar
+            - Stmt
+          act: |
+            //Stmt 'If', 'LPar', 'Expr', 'RPar', 'Stmt', 'Else0'
+
+        - val:
+            - If
+            - LPar
+            - Expr
+            - RPar
+            - Stmt
+            - Else
+            - Stmt
+          act: |
+            //Stmt 'If', 'LPar', 'Expr', 'RPar', 'Stmt', 'Else0'
+
+#        - val:
+#            - Break
+#            - Semi
+#          act: |
+#            //Stmt Break', 'Semi'
+#        - val:
+#            - Continue
+#            - Semi
+#          act: |
+#            //Stmt Continue', 'Semi
+
+
+    - lval: StmtList
+      rval:
+        - val:
+            - StmtList
+            - Stmt
+          act: |
+            // StmtList StmtList', 'Stmt
+        - val :
+            - Stmt
+          act : |
+            // fadsf 
+  
+  
+  
+  
+  
+
+
+
+
+  priority:
+    - tokens:
+        - Or
+      level: 1
+    - tokens:
+        - And
+      level: 2
+    - tokens:
+        - Eq
+        - Ne
+      level: 3
+    - tokens:
+        - Lt
+        - Le
+        - Ge
+        - Gt
+      level: 4
+    - tokens:
+        - Add
+        - Sub
+      level: 5
+    - tokens:
+        - Mul
+        - Div
+        - Mod
+      level: 6

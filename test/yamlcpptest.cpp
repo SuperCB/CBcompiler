@@ -2,7 +2,7 @@
 // Created by supercb on 22-6-17.
 //
 #include "gtest/gtest.h"
-#include "../src/Regex2Dfa/CFlex.h"
+#include "../lib/Regex2Dfa/CFlex.h"
 
 #include <yaml-cpp/yaml.h>
 

@@ -1,7 +1,7 @@
 //
 // Created by supercb on 22-5-29.
 //
-#include "../src/SSA/Graph.h"
+#include "../lib/SSA/Graph.h"
 #include "gtest/gtest.h"
 #include <set>
 #include <vector>

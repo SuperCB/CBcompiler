@@ -16,7 +16,7 @@
 #include <map>
 #include <algorithm>
 #include <list>
-#include "dbg.h"
+#include "../../include/dbg.h"
 #include "DfaUtil.h"
 
 namespace CBCompiler {
