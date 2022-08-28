@@ -19,6 +19,8 @@
 #include "visitor.h"
 #include "common.h"
 #include "ast.h"
+#include <sstream>
+
 
 class Func;
 
@@ -106,13 +108,17 @@ public:
     // 这个构造函数没有初始化prev和next，这没有关系
     // 因为prev和next永远不会从一个Use开始被主动使用，而是在遍历Use链表的时候用到
     // 而既然这个Use已经被加入了一个链表，它的prev和next也就已经被赋值了
-    Use(Value *v, Instruction *u) : value(v), user(u) {
+
+    Use() : prev(nullptr), next(nullptr), value(nullptr), user(nullptr) {}
+
+    Use(Value *v, Instruction *u) : value(v), user(u), prev(nullptr), next(nullptr) {
+
         if (v) v->addUse(this);
     }
 
     // 没有必要定义移动构造函数/拷贝运算符，语义没有区别
     // 一般不会用到它们，只在类似vector内部构造临时变量又析构的场景中用到
-    Use(const Use &rhs) : value(rhs.value), user(rhs.user) {
+    Use(const Use &rhs) : value(rhs.value), user(rhs.user), prev(rhs.prev), next(rhs.next) {
         if (value) value->addUse(this);
     }
 
@@ -191,7 +197,6 @@ private:
 };
 
 
-
 class GlobalRef : public Value {
 public:
     Decl *decl;
@@ -200,11 +205,11 @@ public:
 };
 
 class ParamRef : public Value {
-    Decl *decl;
 
 public:
     ParamRef(Decl *decl) : Value(), decl(decl) {}
 
+    Decl *decl;
 };
 
 class UndefValue : Value {
@@ -380,8 +385,8 @@ public:
 class AccessInst : public Instruction {
 public:
     Decl *lhs_sym;
-    Use index;
     Use arr;
+    Use index;
 
     AccessInst(Decl *lhs_sym, Value *arr, Value *index, BasicBlock *insertAtEnd)
             : Instruction(insertAtEnd), lhs_sym(lhs_sym), arr(arr, this), index(index, this) {}
@@ -414,8 +419,8 @@ class StoreInst : public AccessInst {
 public:
     Use data;
 
-    StoreInst(Decl *lhs_sym, Value *arr, Value *data, Value *index, BasicBlock *insertAtEnd)
-            : AccessInst(lhs_sym, arr, index, insertAtEnd), data(data, this) {}
+    StoreInst(Decl *decl, Value *arr, Value *data, Value *index, BasicBlock *insertAtEnd)
+            : AccessInst(decl, arr, index, insertAtEnd), data(data, this) {}
 
     void Accept(InstructionVisitor *x) override;
 

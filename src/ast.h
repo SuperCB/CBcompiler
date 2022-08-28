@@ -217,6 +217,7 @@ public:
         return !dims.empty() && dims[0] == nullptr;
     }
 
+    Decl()=default;
     Decl(bool is_const_, bool has_init_, bool is_glob_, std::string_view name_, std::vector<Expr *> dims_,
          InitList init_) :
             is_const(is_const_), has_init(has_init_), is_glob(is_glob_), name(name_), dims(dims_), init(init_) {}

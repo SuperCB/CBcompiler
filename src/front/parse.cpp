@@ -381,8 +381,9 @@ Program parse() {
                                 std::move(*std::get_if<std::vector<Decl>>(&stk.top().first)));
                         stk.pop();
                         Program _2;
-                        for(auto item:_1)
+                        for(auto &item:_1)
                         {
+                            item.is_glob = true;
                             _2.func_or_decl.emplace_back(item);
                         }
                         dbg("program decl");
@@ -1000,6 +1001,7 @@ Program parse() {
                         [[maybe_unused]] Token _1(std::move(*std::get_if<Token>(&stk.top().first)));
                         stk.pop();
                         __ = new Return(_2);
+                        dbg("return");
                         break;
                     }
                     case 62: {//  Stmt  Return  Semi

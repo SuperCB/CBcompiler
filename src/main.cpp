@@ -9,7 +9,7 @@
 
 int main() {
     FILE *pf = fopen(
-            "/home/supercb/mycode/CppProjects/CBcompiler/sysyruntimelibrary/section1/functional_test/00_arr_defn2.sy",
+            "/home/supercb/mycode/CppProjects/CBcompiler/sysyruntimelibrary/section1/functional_test/99_register_realloc.sy",
             "r");
     yyset_in(pf);
     yylex();
@@ -26,5 +26,7 @@ int main() {
 //    run_passes(ir, opt);
     std::ofstream output("output_ir.ll");
     output << *ir;
+
+
     return 0;
 }

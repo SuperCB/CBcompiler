@@ -3,25 +3,24 @@
 //
 
 #include "ir.h"
+
 std::unordered_map<int, ConstValue *>ConstValue::POOL = {};
 
 
-
 std::string printvalue(Value *x, IndexMapper<Value> *indexMapper) {
+    std::stringstream ss;
 
-//
-//    if (auto v=dynamic_cast<ConstValue *>(x)) {
-//
-//        return v->imm;
-//    }
-//    else if (dynamic_cast<ParamRef *>(x)) {
-//
-//    } else if (dynamic_cast<>) {
-//
-//    } else {
-//        return
-//    }
-    return "fuck";
+    if (auto v = dynamic_cast<ConstValue *>(x)) {
+        ss << v->imm;
+    } else if (auto v = dynamic_cast<ParamRef *>(x)) {
+        ss << "%" << v->decl->name;
+    } else if (auto v = dynamic_cast<GlobalRef *>(x)) {
+        ss << "@_" << v->decl->name;
+    } else {
+
+        ss << "%t" << indexMapper->get(x);
+    }
+    return ss.str();
 }
 
 
@@ -52,9 +51,9 @@ void InstructionVisitor::Visit(LoadInst *x) {
     u32 t1 = v_index->alloc();
     os << "%t" << t1 << " = getelementptr inbounds i32, i32";
 
-    os << "*" << "%t" << v_index->get(x->arr.value) << ", ";
+    os << "*  " <<printvalue(x->arr.value, v_index) << ", ";
 
-    os << "i32 " << printvalue(x, v_index);
+    os << "i32 " << printvalue(x->index.value, v_index);
     //pv(v_index, x->index.value);
 
     os << std::endl;
@@ -85,7 +84,7 @@ void InstructionVisitor::Visit(BinaryInst *x) {
            << temp
            << " = "
            << op_name
-           << "i32"
+           << " i32 "
            << printvalue(x->lhs.value, v_index)
            << ", "
            << printvalue(x->rhs.value, v_index)
@@ -110,9 +109,9 @@ void InstructionVisitor::Visit(StoreInst *x) {
     u32 t1 = v_index->alloc();
     os << "%t" << t1 << " = getelementptr inbounds i32, i32";
 
-    os << "*" << "%t" << v_index->get(x->arr.value) << ", ";
+    os << "*" << printvalue(x->arr.value, v_index) << ", ";
 
-    os << "i32 " << printvalue(x, v_index);
+    os << "i32 " << printvalue(x->index.value, v_index);
 
 //    os << "%t" << temp << " = getelementptr inbounds i32, i32";
 //    os << "* " << pv(v_index, x->arr.value) << ", ";
@@ -132,7 +131,7 @@ void InstructionVisitor::Visit(ReturnInst *x) {
 
     if (x->ret.value) {
         os << "ret i32 "
-           << printvalue(x, v_index)
+           << printvalue(x->ret.value, v_index)
            << std::endl;
     } else {
         os << "ret void" << std::endl;
@@ -181,7 +180,7 @@ void InstructionVisitor::Visit(BranchInst *x) {
 //    os << "; if " << pv(v_index, x->cond.value) << " then _" << bb_index.find(x->left)->second << " else _"
 //       << bb_index.find(x->right)->second << endl;
     u32 temp = v_index->alloc();
-    os << "\t%t"
+    os << "%t"
        << temp
        << " = icmp ne i32 "
        << printvalue(x->cond.value, v_index)
@@ -251,6 +250,7 @@ void print_flatten_init(std::ostream &os, Expr **dims, Expr **dims_end, Expr **f
         os << "]";
     }
 }
+
 std::ostream &operator<<(std::ostream &os, const IrProgram &p) {
     using std::endl;
 
@@ -296,7 +296,7 @@ std::ostream &operator<<(std::ostream &os, const IrProgram &p) {
             os << " {" << endl;
         }
 
-        os << "_entry:" << endl;
+//        os << "_entry:" << endl;
         // bb的标号没有必要用IndexMapper，而且IndexMapper的编号是先到先得，这看着并不是很舒服
 
         std::map<BasicBlock *, u32> bb_index;
@@ -310,14 +310,18 @@ std::ostream &operator<<(std::ostream &os, const IrProgram &p) {
         }
 
 
-
         for (auto bb = f->bb.head; bb; bb = bb->next) {
             u32 index = bb_index.find(bb)->second;
-            os << "_" << index << ": ; preds = ";
-            for (u32 i = 0; i < bb->pred.size(); ++i) {
-                if (i != 0) os << ", ";
-                os << "%_" << bb_index.find(bb->pred[i])->second;
+            os << "_" << index << ":";
+
+            if (bb->pred.size()) {
+                os << "                        ; preds = ";
+                for (u32 i = 0; i < bb->pred.size(); ++i) {
+                    if (i != 0) os << ", ";
+                    os << "%_" << bb_index.find(bb->pred[i])->second;
+                }
             }
+
             // 这里原来会输出dom info的，现在不输出了，因为现在所有pass结束后dom info不是有效的
             os << endl;
             for (auto inst = bb->insts.head; inst != nullptr; inst = inst->next) {
@@ -329,13 +333,6 @@ std::ostream &operator<<(std::ostream &os, const IrProgram &p) {
     }
     return os;
 }
-
-
-
-
-
-
-
 
 
 void PhiInst::Accept(InstructionVisitor *x) {

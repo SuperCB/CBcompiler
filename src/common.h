@@ -25,8 +25,7 @@ public:
     Node *head;
     Node *tail;
 
-    ilist() { head = tail = nullptr; }
-
+    ilist():head(nullptr),tail(nullptr) {  }
     // insert newNode before insertBefore
     void insertBefore(Node *newNode, Node *insertBefore) {
         newNode->prev = insertBefore->prev;
@@ -51,6 +50,19 @@ public:
         insertAfter->next = newNode;
 
         if (tail == insertAfter) {
+            tail = newNode;
+        }
+    }
+
+    // insert newNode at the end of ilist
+    void insertAtEnd(Node *newNode) {
+        newNode->prev = tail;
+        newNode->next = nullptr;
+
+        if (tail == nullptr) {
+            head = tail = newNode;
+        } else {
+            tail->next = newNode;
             tail = newNode;
         }
     }
@@ -80,19 +92,6 @@ public:
             node->next->prev = node->prev;
         } else {
             tail = node->prev;
-        }
-    }
-
-// insert newNode at the end of ilist
-    void insertAtEnd(Node *newNode) {
-        newNode->prev = tail;
-        newNode->next = nullptr;
-
-        if (tail == nullptr) {
-            head = tail = newNode;
-        } else {
-            tail->next = newNode;
-            tail = newNode;
         }
     }
 };

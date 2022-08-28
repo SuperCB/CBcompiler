@@ -4,9 +4,12 @@
 #include "ast.h"
 #include "ir.h"
 #include <typeinfo>
-
+#include "../include/dbg.h"
 void SsaContext::convert_expr(Expr *expr) {
 
+    ExprVisitor exprVisitor(this);
+
+    expr->Accept(&exprVisitor);
 
 }
 
@@ -17,7 +20,8 @@ Value *SsaContext::get_expr(Expr *expr) {
 }
 
 void SsaContext::convert_stmt(Stmt *stmt) {
-
+    StmtVisitor stmtVisitor(this);
+    stmt->Accept(&stmtVisitor);
 }
 
 
@@ -86,7 +90,8 @@ IrProgram *convert_ssa(Program &p) {
                 }
             }
         } else {
-            Decl *d = std::get_if<1>(&g);
+            dbg("global");
+            Decl *d = std::get_if<Decl>(&g);
             ret->glob_decl.push_back(d);
             d->value = new GlobalRef(d);
         }
@@ -210,7 +215,7 @@ void StmtVisitor::Visit(Block *x) {
 
 void StmtVisitor::Visit(Return *x) {
     if (x->expr) {
-        auto value= ctx->get_expr(x->expr);
+        auto value = ctx->get_expr(x->expr);
 
         new ReturnInst(value, ctx->bb);
     } else {
@@ -390,16 +395,22 @@ void ExprVisitor::Visit(Call *x) {
     args.reserve(x->args.size());
     for (auto &p: x->args) {
         auto value = ctx->get_expr(p);
+
         args.push_back(value);
     }
+
 
     auto inst = new CallInst(x->f->irfunc, ctx->bb);
 
     // args
     inst->args.reserve(x->args.size());
     for (auto &value: args) {
+
         inst->args.emplace_back(value, inst);
     }
     ctx->ret_val = inst;
 }
 
+void ExprVisitor::Visit(IntConstant *x) {
+    ctx->ret_val = ConstValue::get(x->val);
+}

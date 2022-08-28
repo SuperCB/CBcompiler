@@ -67,6 +67,15 @@ public:
     void Visit(IntConstant *x) override;
 
 };
+enum class SymbolType{
+    DECLARATION,
+    FUNCTION
+};
+struct Symbol{
+    SymbolType type;
+    void *addr;
+};
+
 
 class SymContext {
 
@@ -79,25 +88,21 @@ private:
         }
     };
     static Deletor deletor;
-    using Symbol = std::variant<Func *, Decl *>;
     using uint = unsigned int;
-
 // symtableal symbols
 //存储全局函数与全局定义
     static SymContext *context;
 public:
 
 
-
-
     std::unordered_map<std::string_view, Symbol> symtable;
 // stacks of local decls
     std::vector<std::unordered_map<std::string_view, Decl *>> local_stk;
 
-    Func *cur_func;
+    Func *cur_func= nullptr;
 
 //用于检测不合规矩的循环语法
-    uint loop_cnt;
+    uint loop_cnt=0;
 
     SymContext() = default;
     static SymContext *getOneInstance() {
@@ -111,8 +116,8 @@ public:
     Func *lookup_func(std::string_view name) {
         auto res = symtable.find(name);
         if (res != symtable.end()) {
-            if (Func *f = std::get<Func *>(res->second)) {
-                return f;
+            if (res->second.type==SymbolType::FUNCTION){
+                return reinterpret_cast<Func*>(res->second.addr);
             }
         }
         ERR("no such func", name);
@@ -129,8 +134,8 @@ public:
 
         auto res = symtable.find(name);
         if (res != symtable.end()) {
-            if (Decl *d = std::get<Decl *>(res->second)) {
-                return d;
+            if (res->second.type==SymbolType::DECLARATION) {
+                return reinterpret_cast<Decl*>(res->second.addr);
             }
         }
         ERR("no such variable", name);
@@ -140,7 +145,7 @@ public:
 
     void check_func(Func *f) {
         cur_func = f;
-        if (!symtable.insert({f->name, f}).second) {
+        if (!symtable.insert({f->name, {SymbolType::FUNCTION,static_cast<void*>(f)}}).second) {
             ERR("duplicate function", f->name);
         }
         local_stk.emplace_back();  // 参数作用域就是第一层局部变量的作用域
@@ -195,7 +200,7 @@ public:
     }
 
     void check_stmt(Stmt *s) {
-        StmtTypecheckVisitor stmtTypecheckVisitor(getOneInstance());
+        StmtTypecheckVisitor stmtTypecheckVisitor(this);
         s->Accept(&stmtTypecheckVisitor);
     }
 

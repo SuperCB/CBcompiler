@@ -7,7 +7,7 @@ void ExprTypecheckVisitor::Visit(Binary *x) {
     if (x->lhs->type != Expr::ExprType::INT && x->rhs->type != Expr::ExprType::INT) {
         ERR("binary operator expect int operands");
     }
-
+    x->type = Expr::ExprType::INT;
 }
 
 void ExprTypecheckVisitor::Visit(IntConstant *x) {
@@ -28,7 +28,11 @@ void ExprTypecheckVisitor::Visit(Index *x) {
             ERR("index operator expect int operand");
         }
     }
-//    return d->dims.empty() ? empty : std::pair{d->dims.data() + x->dims.size(), d->dims.data() + d->dims.size()};
+    if (d->dims.size() == x->dims.size()) {
+        x->type = Expr::ExprType::INT;
+    } else {
+        x->type = Expr::ExprType::POINT;
+    }
 }
 
 void ExprTypecheckVisitor::Visit(Call *x) {
@@ -62,6 +66,13 @@ void StmtTypecheckVisitor::Visit(Assign *x) {
     if (d->is_const) {
         ERR("can't assign to const decl");
     }
+    for (Expr *e: x->dims) {
+        context->check_expr(e);
+        if (e->type != Expr::ExprType::INT) {
+            ERR("index operator expect int operand");
+        }
+    }
+    context->check_expr(x->rhs);
 }
 
 void StmtTypecheckVisitor::Visit(DeclStmt *x) {
@@ -77,7 +88,7 @@ void StmtTypecheckVisitor::Visit(DeclStmt *x) {
 void StmtTypecheckVisitor::Visit(If *x) {
 
     context->check_expr(x->cond);
-    if (x->cond->type == Expr::ExprType::INT) {
+    if (x->cond->type != Expr::ExprType::INT) {
         ERR("cond isn't int type");
     }
     context->check_stmt(x->on_true);
@@ -97,11 +108,13 @@ void StmtTypecheckVisitor::Visit(While *x) {
 }
 
 void StmtTypecheckVisitor::Visit(Return *x) {
+    if (x->expr) {
+        context->check_expr(x->expr);
+        if (context->cur_func->is_int && x->expr->type != Expr::ExprType::INT) {
+            ERR("return type mismatch");
+        }
+    } else {
 
-    context->check_expr(x->expr);
-    if (!((context->cur_func->is_int && x->expr->type == Expr::ExprType::INT) ||
-          (!context->cur_func->is_int && x->expr->type != Expr::ExprType::INT))) {
-        ERR("return type mismatch");
     }
 }
 
@@ -131,20 +144,18 @@ void StmtTypecheckVisitor::Visit(ExprStmt *x) {
 
 
 void type_check(Program &p) {
-
-    for (auto g: p.func_or_decl) {
-        if (Func *f = std::get_if<0>(&g)) {
+    for (auto &item: p.func_or_decl) {
+        if (Func *f = std::get_if<0>(&item)) {
             SymContext::getOneInstance()->check_func(f);
-        } else if (Decl *d = std::get_if<1>(&g)) {
+        } else if (Decl *d = std::get_if<1>(&item)) {
             SymContext::getOneInstance()->check_decl(*d);
             // 变量定义在检查后加入符号表，不允许定义时引用自身
-            if (!SymContext::getOneInstance()->symtable.insert({d->name, d}).second) {
+            if (!SymContext::getOneInstance()->symtable.insert(
+                    {d->name, {SymbolType::DECLARATION, static_cast<void *>(d)}}).second) {
                 ERR("duplicate decl", d->name);
             }
         }
-
     }
-
 }
 
 SymContext *SymContext::context = nullptr;

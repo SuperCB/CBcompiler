@@ -12,19 +12,24 @@ private:
     SsaContext *ctx;
 public:
 
+    explicit ExprVisitor(SsaContext *ctx_) : ctx(ctx_) {}
+
     void Visit(Binary *x);
 
     void Visit(Call *x);
 
     void Visit(Index *x);
 
-    void Visit(IntConstant *x) {};
+    void Visit(IntConstant *x);
 };
 
 
 class StmtVisitor : public StmtBaseVisitor {
 private:
     SsaContext *ctx;
+public:
+    explicit StmtVisitor(SsaContext *ctx_) : ctx(ctx_) {}
+
 public:
     void Visit(Assign *x);
 
